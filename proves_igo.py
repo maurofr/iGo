@@ -142,7 +142,7 @@ def comparar_coordenades_prova():
             traffic_later = int(c[-1])
             afegeix_tram(routes, node1, node2, traffic_now, graph, digraph)
 
-    ec = osmnx.plot.get_edge_colors_by_attr(graph, "congestion", cmap="turbo")
+    ec = osmnx.plot.get_edge_colors_by_attr(graph, "congestion", cmap="plasma")
     osmnx.plot_graph(graph, edge_color=ec, edge_linewidth=2, node_size=0, bgcolor="#ffffff")
 
 comparar_coordenades_prova()
