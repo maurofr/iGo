@@ -108,16 +108,8 @@ def comparar_coordenades_prova():
 
     graph, digraph = load_graph()
     #print(list(graph.degree)) #print(list(graph.nodes)) //nodes o edges
-    """
-    key = 'x'
-    for node1, info1 in graph.nodes.items():
-        if key in info1:
-            if(abs(float(info1.get("x")) - float(coord[0])) < 10e-6):
-                print(True)
-                print(list(info1))
-        #print(node1, info1) #type(info1) = dictionary, list(info1) et diu les keys que té
-    print(coord[0])
-    """
+    X0, Y0 = ?
+    node = ox.distance.nearest_nodes(Gp, X0, Y0)
 
 read_highways()
 #comparar_coordenades_prova()
