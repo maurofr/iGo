@@ -21,20 +21,20 @@ Congestion = collections.namedtuple('Congestion', 'tram')
 #we download the and save the graph(map)
 def download_and_save_graph():
     graph = osmnx.graph_from_place(PLACE, network_type = 'drive', simplify = True)
-    graph = osmnx.utils_graph.get_digraph(graph, weight = 'length')
+    digraph = osmnx.utils_graph.get_digraph(graph, weight = 'length')
     with open(GRAPH_FILENAME, 'wb') as file:
-        pickle.dump(graph, file)
+        pickle.dump([graph, digraph], file)
 
 
 def load_graph():
     with open(GRAPH_FILENAME, 'rb') as file:
-        graph = pickle.load(file)
-    return graph
+        graph, digraph = pickle.load(file)
+    return graph, digraph
 
 
 # for each node and its information...
 def print_graph():
-    graph = load_graph()
+    graph, digraph = load_graph()
     #print(list(graph.degree)) #print(list(graph.nodes)) //nodes o edges
 
     for node1, info1 in graph.nodes.items():
@@ -46,9 +46,9 @@ def print_graph():
             print('        ', edge) #type(edge) = dictionary
 
     #osmnx.plot_graph(graph)
-"""transforms coordinates from a string into a vector
-in which every position is a coordinate"""
 def coordinates_transform(coordinates):
+    """transforms coordinates from a string into a vector
+    in which every position is a coordinate"""
     v = []
     s = ""
     pair = []
@@ -106,7 +106,7 @@ def comparar_coordenades_prova():
     #highways
     highways = read_highways()
 
-    graph = load_graph()
+    graph, digraph = load_graph()
     #print(list(graph.degree)) #print(list(graph.nodes)) //nodes o edges
     """
     key = 'x'
