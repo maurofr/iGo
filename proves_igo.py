@@ -39,7 +39,8 @@ def print_graph():
 
     for node1, info1 in graph.nodes.items():
         #print(node1, info1) #type(info1) = dictionary, list(info1) et diu les keys que té
-        print(graph.nbunch_iter(node1))
+        print(graph[node1])
+        print(info1)
         """
         # for each adjacent node and its information...
         for node2, edge in graph.adj[node1].items():
