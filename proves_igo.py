@@ -64,7 +64,6 @@ def coordinates_transform(coordinates):
             s = s + i
     pair.append(float(s))
     v.append(pair)
-    print(v)
     return v
 
 
@@ -80,8 +79,8 @@ def read_highways():
             v.append(way_id)
             v.append(description)
             v.append(coordinates)
-            coordinates_transform(coordinates)
-            result.append(v)
+            result.append(coordinates_transform(coordinates))
+            #result.append(v)
             #print(way_id, description, coordinates) #les tres variables són strings
 
     return result
@@ -108,8 +107,12 @@ def comparar_coordenades_prova():
 
     graph, digraph = load_graph()
     #print(list(graph.degree)) #print(list(graph.nodes)) //nodes o edges
-    X0, Y0 = ?
-    node = ox.distance.nearest_nodes(Gp, X0, Y0)
 
-read_highways()
-#comparar_coordenades_prova()
+    for v in highways:
+        for c in v:
+            X0 = c[0]
+            Y0 = c[1]
+            node = osmnx.distance.nearest_nodes(digraph, X0, Y0)
+
+
+comparar_coordenades_prova()
