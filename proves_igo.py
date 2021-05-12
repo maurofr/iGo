@@ -37,9 +37,9 @@ def print_graph():
     graph, digraph = load_graph()
     #print(list(graph.degree)) #print(list(graph.nodes)) //nodes o edges
 
-    for node1, info1 in graph.nodes.items():
+    for node1, info1 in digraph.nodes.items():
         #print(node1, info1) #type(info1) = dictionary, list(info1) et diu les keys que té
-        print(graph[node1])
+        print(digraph[node1])
         print(info1)
         """
         # for each adjacent node and its information...
@@ -75,14 +75,14 @@ def read_highways():
         lines = [l.decode('utf-8') for l in response.readlines()]
         reader = csv.reader(lines, delimiter=',', quotechar='"')
         next(reader)  # ignore first line with description
-        result = []
+        result = [[] for _ in range(534)]
         for line in reader:
             v = []
             way_id, description, coordinates = line
             v.append(way_id)
             v.append(description)
             v.append(coordinates)
-            result.append(coordinates_transform(coordinates))
+            result[int(way_id)-1] = coordinates_transform(coordinates)
             #result.append(v)
             #print(way_id, description, coordinates) #les tres variables són strings
 
@@ -111,13 +111,49 @@ def comparar_coordenades_prova():
     graph, digraph = load_graph()
     #print(list(graph.degree)) #print(list(graph.nodes)) //nodes o edges
 
+    routes = []
+    # modificar perq fagi tot i modular-ho
     for v in highways:
-        for c in v:
-            X0 = c[0]
-            Y0 = c[1]
-            node = osmnx.distance.nearest_nodes(digraph, X0, Y0)
-            #need to pip3 install scikit-learn
-            print(node)
+        n = len(v)
+        if n != 0:
+            node1 = osmnx.distance.nearest_nodes(digraph, v[0][0], v[0][1])
+            node2 = osmnx.distance.nearest_nodes(digraph, v[n-1][0], v[n-1][1])
+        try:
+            route1 = osmnx.shortest_path(digraph, node1, node2)
+            route2 = osmnx.shortest_path(digraph, node2, node1)
+            for node in route1:
+                # asldaslkdjaslkdjasdlkajsd
+            routes.append(route1)
+            routes.append(route2)
+        except:
+            pass
 
-#comparar_coordenades_prova()
-print_graph()
+    #for i in range(len(congestions)):
+    #    l = len[congestions[i]]
+    #    congestions[i][l-1]
+
+    #osmnx.plot_graph_routes(graph, routes, route_linewidth=6, node_size=0, bgcolor='k')
+
+comparar_coordenades_prova()
+#print_graph()
+#graph, digraph = load_graph()
+#highways = read_highways()
+#congestions = read_congestions()
+
+#route1 = osmnx.shortest_path(digraph, 390227138, 687897113)
+#node1 = osmnx.distance.nearest_nodes(graph, 2.206062333803802, 41.44356616311283)
+#node2 = osmnx.distance.nearest_nodes(graph, 2.201961946861377, 41.44804289389951)
+#node3 = osmnx.distance.nearest_nodes(graph, 2.200663088952131, 41.44881362403847)
+#node4 = osmnx.distance.nearest_nodes(graph, 2.197777924171125, 41.44949306786887)
+#node5 = osmnx.distance.nearest_nodes(graph, 2.196633557528038, 41.44990657344401)
+
+#diag1 = osmnx.distance.nearest_nodes(digraph, 2.167816301234855,41.37498443097444)
+#diag2 = osmnx.distance.nearest_nodes(digraph, 2.175962748986153,41.37437372698415)
+
+#route1 = osmnx.shortest_path(digraph, diag2, diag1)
+#route2 = osmnx.shortest_path(digraph, diag1, diag2)
+#route1 = osmnx.shortest_path(graph, node1,node3)
+#route2 = osmnx.shortest_path(graph, node2, node3)
+#route3 = osmnx.shortest_path(graph, node3, node4)
+#route4 = osmnx.shortest_path(graph, node4, node5)
+#osmnx.plot_graph_route(graph, route1, route_linewidth=6, node_size=0, bgcolor='k')
