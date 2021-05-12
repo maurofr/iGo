@@ -38,12 +38,14 @@ def print_graph():
     #print(list(graph.degree)) #print(list(graph.nodes)) //nodes o edges
 
     for node1, info1 in graph.nodes.items():
-        print(node1, info1) #type(info1) = dictionary, list(info1) et diu les keys que té
-
+        #print(node1, info1) #type(info1) = dictionary, list(info1) et diu les keys que té
+        print(graph.nbunch_iter(node1))
+        """
         # for each adjacent node and its information...
         for node2, edge in graph.adj[node1].items():
             print('    ', node2)
             print('        ', edge) #type(edge) = dictionary
+        """
 
     #osmnx.plot_graph(graph)
 def coordinates_transform(coordinates):
@@ -114,5 +116,7 @@ def comparar_coordenades_prova():
             Y0 = c[1]
             node = osmnx.distance.nearest_nodes(digraph, X0, Y0)
             #need to pip3 install scikit-learn
+            print(node)
 
-comparar_coordenades_prova()
+#comparar_coordenades_prova()
+print_graph()
