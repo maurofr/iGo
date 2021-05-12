@@ -14,3 +14,5 @@ Comandes git:
 - git pull -> agafa els arxius / diferencies del github actualitzant la teva carpeta
 
 hi ha el concepte de branches també pero crec que no ens farà falta, així les coses són més fàcils
+
+colors per el trafic: https://matplotlib.org/stable/tutorials/colors/colormaps.html

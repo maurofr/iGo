@@ -33,13 +33,10 @@ def load_graph():
 
 
 # for each node and its information...
-def print_graph():
-    graph, digraph = load_graph()
-    #print(list(graph.degree)) #print(list(graph.nodes)) //nodes o edges
-
-    for node1, info1 in digraph.nodes.items():
+def print_graph(graph):
+    for node1, info1 in graph.nodes.items():
         #print(node1, info1) #type(info1) = dictionary, list(info1) et diu les keys que té
-        print(digraph[node1])
+        print(graph[node1])
         print(info1)
         """
         # for each adjacent node and its information...
@@ -93,46 +90,60 @@ def read_congestions():
         lines = [l.decode('utf-8') for l in response.readlines()]
         reader = csv.reader(lines, delimiter=',', quotechar='"')
         #next(reader)  # ignore first line with description   en aquest cas la primera linia no s'ha d'ignorar
-        result = []
+        result = ["" for _ in range(534)]
         for line in reader:
             way_id = line
-            result.append(way_id[0])
+            i = 0
+            while way_id[0][i] != '#':
+                i+=1
+            result[int(way_id[0][0:i]) - 1] = way_id[0]
             #print(way_id[0]) #way_id és de tipus list de mida 1. way_id[0] és un string
-
     return result
 
+
+def add_traffic_data(route, traffic_now, graph, digraph):
+    last_node = -1
+    for node in route:
+        if last_node != -1:
+            graph.edges[last_node, node, 0]["congestion"] = max(graph.edges[last_node, node, 0]["congestion"], traffic_now)
+            digraph.edges[last_node, node]["congestion"] = max(digraph.edges[last_node, node]["congestion"], traffic_now)
+        last_node = node
+
+
+def afegeix_tram(routes, node1, node2, traffic_now, graph, digraph):
+    try:
+        route1 = osmnx.shortest_path(digraph, node1, node2)
+        route2 = osmnx.shortest_path(digraph, node2, node1)
+        routes.append(route1)
+        add_traffic_data(route1, traffic_now, graph, digraph)
+        add_traffic_data(route2, traffic_now, graph, digraph)
+        routes.append(route2)
+    except:
+        pass
+
+
 def comparar_coordenades_prova():
-    #congestions
-    congestions = read_congestions()
-
-    #highways
-    highways = read_highways()
-
     graph, digraph = load_graph()
+
+    congestions = read_congestions()
+    highways = read_highways()
     #print(list(graph.degree)) #print(list(graph.nodes)) //nodes o edges
+    networkx.set_edge_attributes(graph, 0, "congestion")
+    networkx.set_edge_attributes(digraph, 0, "congestion")
 
-    routes = []
-    # modificar perq fagi tot i modular-ho
-    for v in highways:
-        n = len(v)
-        if n != 0:
+    routes = [] # Vector amb els trams de la via pública
+    for i in range(534):
+        v = highways[i]
+        c = congestions[i]
+        if len(v) != 0 and len(c) != 0:
             node1 = osmnx.distance.nearest_nodes(digraph, v[0][0], v[0][1])
-            node2 = osmnx.distance.nearest_nodes(digraph, v[n-1][0], v[n-1][1])
-        try:
-            route1 = osmnx.shortest_path(digraph, node1, node2)
-            route2 = osmnx.shortest_path(digraph, node2, node1)
-            for node in route1:
-                # asldaslkdjaslkdjasdlkajsd
-            routes.append(route1)
-            routes.append(route2)
-        except:
-            pass
+            node2 = osmnx.distance.nearest_nodes(digraph, v[-1][0], v[-1][1])
+            traffic_now = int(c[-3])
+            traffic_later = int(c[-1])
+            afegeix_tram(routes, node1, node2, traffic_now, graph, digraph)
 
-    #for i in range(len(congestions)):
-    #    l = len[congestions[i]]
-    #    congestions[i][l-1]
-
-    #osmnx.plot_graph_routes(graph, routes, route_linewidth=6, node_size=0, bgcolor='k')
+    ec = osmnx.plot.get_edge_colors_by_attr(graph, "congestion", cmap="turbo")
+    osmnx.plot_graph(graph, edge_color=ec, edge_linewidth=2, node_size=0, bgcolor="#ffffff")
 
 comparar_coordenades_prova()
 #print_graph()
