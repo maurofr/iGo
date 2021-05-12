@@ -113,6 +113,6 @@ def comparar_coordenades_prova():
             X0 = c[0]
             Y0 = c[1]
             node = osmnx.distance.nearest_nodes(digraph, X0, Y0)
-
+            #need to pip3 install scikit-learn
 
 comparar_coordenades_prova()
