@@ -1,0 +1,2 @@
+llibreries: geopy
+pip install geopy
