@@ -9,6 +9,9 @@ import staticmap
 import matplotlib.pyplot as plt
 import numpy as np
 
+import geopy
+from geopy.geocoders import Nominatim
+
 PLACE = 'Barcelona, Catalonia'
 GRAPH_FILENAME = 'barcelona.graph'
 SIZE = 800
@@ -101,6 +104,15 @@ def read_congestions():
     return result
 
 
+def from_location_to_node(place):  #"pip install geopy" is necessary
+    graph, digraph = load_graph() #posar això aquí o que ja ho rebi la funció?
+    geolocator = Nominatim(user_agent = "OpenStreetMap")
+    place = place + " Barcelona Catalonia"#només amb Barcelona ja funciona, però per assegurar
+    location = geolocator.geocode(place)
+    print((location.latitude, location.longitude)) #en quin ordre s'han de posar??
+    node = osmnx.distance.nearest_nodes(digraph, location.longitude, location.latitude)
+    print(graph[node])
+
 def add_traffic_data(route, traffic_now, graph, digraph):
     last_node = -1
     for node in route:
@@ -145,7 +157,8 @@ def comparar_coordenades_prova():
     ec = osmnx.plot.get_edge_colors_by_attr(graph, "congestion", cmap="plasma")
     osmnx.plot_graph(graph, edge_color=ec, edge_linewidth=2, node_size=0, bgcolor="#ffffff")
 
-comparar_coordenades_prova()
+from_location_to_node("Campus Nord")
+#comparar_coordenades_prova()
 #print_graph()
 #graph, digraph = load_graph()
 #highways = read_highways()
