@@ -1,2 +1,1 @@
-llibreries: geopy
-pip install geopy
+posar llibreries i tot el que s'ha d'instal·lar
