@@ -100,14 +100,14 @@ def read_congestions():
             #print(way_id[0]) #way_id és de tipus list de mida 1. way_id[0] és un string
     return result
 
-
+"receives the name of a location and it returns its nearest node of the graph"
 def from_location_to_node(place):
     graph, digraph = load_graph() #posar això aquí o que ja ho rebi la funció?
     place = place + " Barcelona Catalonia"#només amb Barcelona ja funciona, però per assegurar
     location = osmnx.geocoder.geocode(place) #és una tupla
     print((location[1], location[0]))
     node = osmnx.distance.nearest_nodes(digraph, location[1], location[0])
-    print(graph[node])
+    print(graph.nodes[node])
 
 def add_traffic_data(route, traffic_now, graph, digraph):
     last_node = -1
@@ -153,7 +153,7 @@ def comparar_coordenades_prova():
     ec = osmnx.plot.get_edge_colors_by_attr(graph, "congestion", cmap="plasma")
     osmnx.plot_graph(graph, edge_color=ec, edge_linewidth=2, node_size=0, bgcolor="#ffffff")
 
-from_location_to_node("Campus Nord")
+from_location_to_node("camp nou")
 #comparar_coordenades_prova()
 #print_graph()
 #graph, digraph = load_graph()
