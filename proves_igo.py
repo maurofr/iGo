@@ -85,6 +85,7 @@ def read_highways():
 
     return result
 
+""" posar un try except per si hi ha un error com l'altre dia??? """
 def read_congestions():
     with urllib.request.urlopen(CONGESTIONS_URL) as response:
         lines = [l.decode('utf-8') for l in response.readlines()]
@@ -101,13 +102,44 @@ def read_congestions():
     return result
 
 "receives the name of a location and it returns its nearest node of the graph"
-def from_location_to_node(place):
-    graph, digraph = load_graph() #posar això aquí o que ja ho rebi la funció?
+def from_location_to_node(place, graph, digraph):
     place = place + " Barcelona Catalonia"#només amb Barcelona ja funciona, però per assegurar
     location = osmnx.geocoder.geocode(place) #és una tupla
     print((location[1], location[0]))
     node = osmnx.distance.nearest_nodes(digraph, location[1], location[0])
     print(graph.nodes[node])
+
+def itime(graph, digraph):
+    comparar_coordenades_prova(graph, digraph)
+    for node1, info1 in graph.nodes.items():
+        #print(node1, info1) #type(info1) = dictionary, list(info1) et diu les keys que té
+        #print(graph[node1])
+        #print(info1)
+        # for each adjacent node and its information...
+        for node2, edge in graph.adj[node1].items():
+            if "maxspeed" in edge[0]:
+                speed = edge[0]["maxspeed"]
+            else:
+                speed = 1 #posar una velocitat predeterminada
+            length = edge[0]["length"] #en teoria tots els edges tenen length
+
+            if "congestion" in edge[0]:
+                print(True) #speed = speed / algo ??
+
+            #print(float(length))
+            if(isinstance(speed, list)): #hi ha speeds que són llistes
+                print(speed)
+            #print(float(speed))
+            #print(time)
+
+
+
+            #print('    ', node2)
+            #print(edge)
+            #print('        ', list(edge[0])) #imprimeix tots els atributs dels edges
+            #print(list(graph.edges[node1, node2, 0])) #fa el mateix que la línia de sobre
+
+
 
 def add_traffic_data(route, traffic_now, graph, digraph):
     last_node = -1
@@ -130,8 +162,7 @@ def afegeix_tram(routes, node1, node2, traffic_now, graph, digraph):
         pass
 
 
-def comparar_coordenades_prova():
-    graph, digraph = load_graph()
+def comparar_coordenades_prova(graph, digraph):
 
     congestions = read_congestions()
     highways = read_highways()
@@ -150,10 +181,12 @@ def comparar_coordenades_prova():
             traffic_later = int(c[-1])
             afegeix_tram(routes, node1, node2, traffic_now, graph, digraph)
 
-    ec = osmnx.plot.get_edge_colors_by_attr(graph, "congestion", cmap="plasma")
-    osmnx.plot_graph(graph, edge_color=ec, edge_linewidth=2, node_size=0, bgcolor="#ffffff")
+    # ec = osmnx.plot.get_edge_colors_by_attr(graph, "congestion", cmap="plasma")
+    # osmnx.plot_graph(graph, edge_color=ec, edge_linewidth=2, node_size=0, bgcolor="#ffffff")
 
-from_location_to_node("camp nou")
+graph, digraph = load_graph()
+itime(graph, digraph)
+#from_location_to_node("camp nou")
 #comparar_coordenades_prova()
 #print_graph()
 #graph, digraph = load_graph()
