@@ -184,6 +184,7 @@ def comparar_coordenades_prova(graph, digraph):
     # ec = osmnx.plot.get_edge_colors_by_attr(graph, "congestion", cmap="plasma")
     # osmnx.plot_graph(graph, edge_color=ec, edge_linewidth=2, node_size=0, bgcolor="#ffffff")
 
+#graph, digraph = download_and_save_graph()
 graph, digraph = load_graph()
 itime(graph, digraph)
 #from_location_to_node("camp nou")
