@@ -74,7 +74,9 @@ def go(update, context):
         origin_lat = dispatcher.bot_data["lat"]
         origin_lon = dispatcher.bot_data["lon"]
         destination_lat, destination_lon = read_arguments(context, update) #estan en l'ordre que toca lat i lon??
-        #falta posar la funció de class_igo.py
+
+        # path = bcn_map.get_shortest_path_with_ispeed(origin_lat, origin_lon, destination_lat, destination_lon)
+        # bcn_map.plot_path(path)
     except:
         context.bot.send_message(
             chat_id=update.effective_chat.id,
@@ -155,6 +157,7 @@ HIGHWAYS_URL = 'https://opendata-ajuntament.barcelona.cat/data/dataset/1090983a-
 CONGESTIONS_URL = 'https://opendata-ajuntament.barcelona.cat/data/dataset/8319c2b1-4c21-4962-9acd-6db4c5ff1148/resource/2d456eb5-4ea6-4f68-9794-2f3f1a58a933/download'
 
 bcn_map = iGraph(PLACE, GRAPH_FILENAME, HIGHWAYS_URL, CONGESTIONS_URL) #posar-ho abans de les funcions
+bcn_map.get_traffic()
 
 # engega el bot
 updater.start_polling()

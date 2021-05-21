@@ -67,6 +67,10 @@ class iGraph():
         ec = osmnx.plot.get_edge_colors_by_attr(self._graph, "congestion", cmap="YlOrRd")
         osmnx.plot_graph(self._graph, edge_color=ec, edge_linewidth=2, node_size=0)
 
+    def print_highways(self):
+        #fer algo
+        return
+
     # Live data reading and processing methods:
     def _coordinates_transform(self, coordinates):
         """transforms coordinates from a string into a vector
@@ -156,15 +160,13 @@ class iGraph():
                 traffic_later = int(c[-1])
                 self._add_tram(trams, node1, node2, traffic_now)
 
-    # Other methds:
-    def from_location_to_node(self, place):
-        """Receives the name of a location and it returns its nearest node of the graph
-        """
-        place = place + " Barcelona Catalonia"  # només amb Barcelona ja funciona, però per assegurar
-        location = osmnx.geocoder.geocode(place)  # és una tupla
-        print((location[1], location[0]))
-        node = osmnx.distance.nearest_nodes(self.digraph, location[1], location[0])
+    # Other methods:
+    """Receives the coordinates of a location and it returns its nearest node of the graph."""
+    def from_location_to_node(self, lat, lon):
+        node = osmnx.distance.nearest_nodes(self.digraph, lat, lon) #vigilar amb lo de lat i lon, que potser estan en ordre equivocat
         print(self.digraph.nodes[node])
+        return node #???
+
 
     def itime(self):
         for node1, info1 in self._graph.nodes.items():
@@ -192,6 +194,16 @@ class iGraph():
                 # print(edge)
                 # print('        ', list(edge[0])) #imprimeix tots els atributs dels edges
                 # print(list(graph.edges[node1, node2, 0])) #fa el mateix que la línia de sobre
+
+        def get_shortest_path_with_ispeed(self, origin_lat, origin_lon, destination_lat, destination_lon):
+            itime(self)
+            origin_node = from_location_to_node(origin_lat, origin_lon)
+            destination_node = from_location_to_node(destination_lat, destination_lon)
+            path = osmnx.distance.shortest_path(self.digraph, origin_node, destination_node, weight = 'itime')
+            return path #this will return a list of lists of the nodes constituting the shortest path between each origin-destination pair. If a path cannot be solved, this will return None for that path
+
+        def plot_path(self, path):
+            return
 
 
 # Data
