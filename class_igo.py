@@ -203,6 +203,8 @@ CONGESTIONS_URL = 'https://opendata-ajuntament.barcelona.cat/data/dataset/8319c2
 
 # Code
 bcn_map = iGraph(PLACE, GRAPH_FILENAME, HIGHWAYS_URL, CONGESTIONS_URL)
+#bcn_map.print_graph()
+
 # print(bcn_map)
 # bcn_map.get_traffic()  # Actualitzar dades de tràfic
 # bcn_map.print_congestions()  # Plot amb el tràfic
