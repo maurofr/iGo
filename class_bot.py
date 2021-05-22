@@ -71,8 +71,9 @@ the user, and it prints the path on a map.
 """
 def go(update, context):
     try:
-        origin_lat = dispatcher.bot_data["lat"]
-        origin_lon = dispatcher.bot_data["lon"]
+        origin_lat = dispatcher.user_data["lat"] #ara user_data és de type defaultdict i encara que "lat" i "lon" no existeixin, els hi assigna el valor de llista buida, pel que el codi no falla, però en teoria hauria de fallar a la funció get_shortest... i per tant el try except estaria ben fet suposo
+        origin_lon = dispatcher.user_data["lon"]
+        print(origin_lat == {}, origin_lon)
         destination_lat, destination_lon = read_arguments(context, update) #estan en l'ordre que toca lat i lon??
 
         # path = bcn_map.get_shortest_path_with_ispeed(origin_lat, origin_lon, destination_lat, destination_lon)
@@ -89,8 +90,8 @@ def go(update, context):
 "Prints the current location of the user on a map."
 def where(update, context):
     try:
-        lat = dispatcher.bot_data["lat"]
-        lon = dispatcher.bot_data["lon"]
+        lat = dispatcher.user_data["lat"]
+        lon = dispatcher.user_data["lon"]
         print(lat, lon)
         fitxer = "%d.png" % random.randint(1000000, 9999999)
         mapa = StaticMap(750, 750) #ajustar la mida del mapa
@@ -112,8 +113,8 @@ def where(update, context):
 "It sets the current location of the user to the position given by him."
 def pos(update, context): #si la ubicació en directe està engegada /pos no funciona bé correctament crec, perquè les dades en directe substitueixen a les de pos
     lat, lon = read_arguments(context, update) #estan en l'ordre que toca lat i lon??
-    dispatcher.bot_data["lat"] = lat
-    dispatcher.bot_data["lon"] = lon
+    dispatcher.user_data["lat"] = lat
+    dispatcher.user_data["lon"] = lon
 
 
 def current_position(update, context):
@@ -124,8 +125,8 @@ def current_position(update, context):
     # extreu la localització del missatge
     lat, lon = message.location.latitude, message.location.longitude
     # escriu la localització al servidor
-    dispatcher.bot_data["lat"] = lat
-    dispatcher.bot_data["lon"] = lon
+    dispatcher.user_data["lat"] = lat
+    dispatcher.user_data["lon"] = lon
     print("actualització = ",lat, lon)
     # envia la localització al xat del client
     context.bot.send_message(chat_id=message.chat_id, text=str((lat, lon)))
@@ -156,8 +157,8 @@ SIZE = 800
 HIGHWAYS_URL = 'https://opendata-ajuntament.barcelona.cat/data/dataset/1090983a-1c40-4609-8620-14ad49aae3ab/resource/1d6c814c-70ef-4147-aa16-a49ddb952f72/download/transit_relacio_trams.csv'
 CONGESTIONS_URL = 'https://opendata-ajuntament.barcelona.cat/data/dataset/8319c2b1-4c21-4962-9acd-6db4c5ff1148/resource/2d456eb5-4ea6-4f68-9794-2f3f1a58a933/download'
 
-bcn_map = iGraph(PLACE, GRAPH_FILENAME, HIGHWAYS_URL, CONGESTIONS_URL) #posar-ho abans de les funcions
-bcn_map.get_traffic()
+#bcn_map = iGraph(PLACE, GRAPH_FILENAME, HIGHWAYS_URL, CONGESTIONS_URL) #posar-ho abans de les funcions
+#bcn_map.get_traffic()
 
 # engega el bot
 updater.start_polling()
