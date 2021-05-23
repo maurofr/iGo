@@ -181,7 +181,10 @@ class iGraph():
         origin_node = self.from_location_to_node(origin_lat, origin_lon)
         destination_node = self.from_location_to_node(destination_lat, destination_lon)
         path = osmnx.distance.shortest_path(self.digraph, origin_node, destination_node, weight = 'itime')
-        return path #this will return a list of lists of the nodes constituting the shortest path between each origin-destination pair. If a path cannot be solved, this will return None for that path
+        a = []
+        for i in path:
+            a.append(self.digraph.nodes[i])
+        return a #this will return a list of lists of the nodes constituting the shortest path between each origin-destination pair. If a path cannot be solved, this will return None for that path
 
     """
     Given a path that goes from one node to another, it calculates the minimum
@@ -205,10 +208,8 @@ class iGraph():
                 max_y = self.digraph.nodes[node]['y']
         bbox = (max_y + 0.005, min_y - 0.005, max_x + 0.005, min_x - 0.005) #+-0.005 to be able to see every node/edge completely
 
-        fitxer = "%d.png" % random.randint(1000000, 9999999)
-        osmnx.plot_graph_route(self._graph, path, route_color = 'r', route_linewidth = 3, route_alpha = 1, node_size = 0, bgcolor='k', bbox = bbox,  show = False, save = True, filepath = fitxer) #route_alpha és la opacitat, close = True perquè sinó el codi no avança
+        osmnx.plot_graph_route(self._graph, path, route_color = 'r', route_linewidth = 3, route_alpha = 1, node_size = 0, bgcolor='k', bbox = bbox) #route_alpha és la opacitat, close = True perquè sinó el codi no avança
 
-        return fitxer
 
 
 # Data

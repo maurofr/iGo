@@ -1,6 +1,6 @@
 # importa l'API de Telegram
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
-from staticmap import StaticMap, CircleMarker
+from staticmap import StaticMap, CircleMarker, Line
 import os
 import random
 from class_igo import *
@@ -82,6 +82,22 @@ def go(update, context):
     destination_lat, destination_lon = read_arguments(context, update) #estan en l'ordre que toca lat i lon??
 
     path = bcn_map.get_shortest_path_with_ispeed(origin_lat, origin_lon, destination_lat, destination_lon)
+
+    fitxer = "%d.png" % random.randint(1000000, 9999999)
+    mapa = StaticMap(750, 750) #ajustar la mida del mapa
+    mida = len(path)
+    i = 0
+    while i < mida-1:
+        mapa.add_line(Line(((path[i]['x'], path[i]['y']), (path[i+1]['x'], path[i+1]['y'])), 'blue', 3))
+        i = i + 1
+    imatge = mapa.render()
+    imatge.save(fitxer)
+    context.bot.send_photo(
+        chat_id=update.effective_chat.id,
+        photo=open(fitxer, 'rb'))
+    os.remove(fitxer)
+
+    """
     fitxer = bcn_map.plot_path(path)
 
     context.bot.send_photo( #si fem un send_photo a vegades peta perquè la foto és massa gran
@@ -96,6 +112,7 @@ def go(update, context):
     context.bot.send_message(
         chat_id=update.effective_chat.id,
         text='Comparteix la teva ubicació o declara una amb /pos per poder mostrar la teva posició actual.')
+    """
 
 
 
