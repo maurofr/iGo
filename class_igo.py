@@ -9,6 +9,7 @@ import staticmap
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import random
 
 # This is what an implementation of the code with a class would look like.
 # It still has to be finished, but gives an idea of how it can be beneficial
@@ -158,26 +159,56 @@ class iGraph():
     # Other methods:
     """Receives the coordinates of a location and it returns its nearest node of the graph."""
     def from_location_to_node(self, lat, lon):
-        node = osmnx.distance.nearest_nodes(self.digraph, lat, lon) #vigilar amb lo de lat i lon, que potser estan en ordre equivocat
-        print(self.digraph.nodes[node])
-        return node #???
+        node = osmnx.distance.nearest_nodes(self.digraph, lon, lat) #lon = 2. i lat = 41.
+        return node
 
 
     def itime(self):
         for edge in self.digraph.edges():
-            self.digraph.edges[edge]['itime'] = -1 # formula
-            print(self.digraph.edges[edge]['itime'])
-            print(self.digraph.edges[edge]['maxspeed'])
+            self.digraph.edges[edge]['itime'] = 2 # formula
+            #print(self.digraph.edges[edge]['itime'])
+            #print(self.digraph.edges[edge]['length'])
+            if 'maxspeed' in self.digraph.edges[edge]:
+                speed = self.digraph.edges[edge]['maxspeed']
+            else:
+                self.digraph.edges[edge]['maxspeed'] = 20 #posar una velocitat predeterminada pels carrers que no en tenen al graf
+            if(isinstance(speed, list)):  # hi ha speeds que són llistes
+                    print(speed)
+
 
     def get_shortest_path_with_ispeed(self, origin_lat, origin_lon, destination_lat, destination_lon):
         self.itime()
-        origin_node = from_location_to_node(origin_lat, origin_lon)
-        destination_node = from_location_to_node(destination_lat, destination_lon)
+        origin_node = self.from_location_to_node(origin_lat, origin_lon)
+        destination_node = self.from_location_to_node(destination_lat, destination_lon)
         path = osmnx.distance.shortest_path(self.digraph, origin_node, destination_node, weight = 'itime')
         return path #this will return a list of lists of the nodes constituting the shortest path between each origin-destination pair. If a path cannot be solved, this will return None for that path
 
-    def plot_path(self, path):
-        return
+    """
+    Given a path that goes from one node to another, it calculates the minimum
+    region in which the path is visible. Then, it prints the map of the city
+    centered in the region, with the path visible on it.
+    """
+    def plot_path(self, path): #també es poden fer dues funcions, una que doni el mapa centrat i l'altre que doni el mapa complet
+        max_x = 0
+        min_x = 1000
+        max_y = 0
+        min_y = 1000
+        for node in path:
+            print(self.digraph.nodes[node])
+            if self.digraph.nodes[node]['x'] < min_x:
+                min_x = self.digraph.nodes[node]['x']
+            elif self.digraph.nodes[node]['x'] > max_x:
+                max_x = self.digraph.nodes[node]['x']
+            elif self.digraph.nodes[node]['y'] < min_y:
+                min_y = self.digraph.nodes[node]['y']
+            elif self.digraph.nodes[node]['y'] > max_y:
+                max_y = self.digraph.nodes[node]['y']
+        bbox = (max_y + 0.005, min_y - 0.005, max_x + 0.005, min_x - 0.005) #+-0.005 to be able to see every node/edge completely
+
+        fitxer = "%d.png" % random.randint(1000000, 9999999)
+        osmnx.plot_graph_route(self._graph, path, route_color = 'r', route_linewidth = 3, route_alpha = 1, node_size = 0, bgcolor='k', bbox = bbox,  show = False, save = True, filepath = fitxer) #route_alpha és la opacitat, close = True perquè sinó el codi no avança
+
+        return fitxer
 
 
 # Data
@@ -187,9 +218,17 @@ SIZE = 800
 HIGHWAYS_URL = 'https://opendata-ajuntament.barcelona.cat/data/dataset/1090983a-1c40-4609-8620-14ad49aae3ab/resource/1d6c814c-70ef-4147-aa16-a49ddb952f72/download/transit_relacio_trams.csv'
 CONGESTIONS_URL = 'https://opendata-ajuntament.barcelona.cat/data/dataset/8319c2b1-4c21-4962-9acd-6db4c5ff1148/resource/2d456eb5-4ea6-4f68-9794-2f3f1a58a933/download'
 
+
+
 # Code
+"""
 bcn_map = iGraph(PLACE, GRAPH_FILENAME, HIGHWAYS_URL, CONGESTIONS_URL)
-bcn_map.itime()
+location1 = osmnx.geocoder.geocode("Camp Nou Barcelona")
+location2 = osmnx.geocoder.geocode("Sagrada Família Barcelona")
+path = bcn_map.get_shortest_path_with_ispeed(location1[0], location1[1], location2[0], location2[1])
+bcn_map.plot_path(path)
+"""
+
 #bcn_map.print_graph()
 
 # print(bcn_map)

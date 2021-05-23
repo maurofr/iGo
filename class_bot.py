@@ -5,6 +5,8 @@ import os
 import random
 from class_igo import *
 
+from PIL import Image
+
 TOKEN_ALBERT = "1848938537:AAEImx4WFL91JFydr9FnfmUIHMuxw1YFJqY"
 TOKEN_MAURO = "1609114464:AAHK86rLORDYaxcjKw9gEOy0sw_IQ04i_oY"
 
@@ -14,13 +16,12 @@ TOKEN = TOKEN_ALBERT
 """
 It recieves a string and it returns true if it is a float, or false otherwise.
 """
-def is_number(s): #he fet copiar pegar d'internet
-    return isinstance(s, float) # això hauria de funcionar
-    #try:
-    #    float(s)
-    #    return True
-    #except ValueError:
-    #    return False
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
 
 """
 It reads the arguments that are passed in the 'pos' and 'go' functions. If the
@@ -74,21 +75,28 @@ Calculates the shortest path from the current location to a destination given by
 the user, and it prints the path on a map.
 """
 def go(update, context):
-    try:
-        origin_lat = dispatcher.user_data["lat"] #ara user_data és de type defaultdict i encara que "lat" i "lon" no existeixin, els hi assigna el valor de llista buida, pel que el codi no falla, però en teoria hauria de fallar a la funció get_shortest... i per tant el try except estaria ben fet suposo
-        origin_lon = dispatcher.user_data["lon"]
-        print(origin_lat == {}, origin_lon)
-        destination_lat, destination_lon = read_arguments(context, update) #estan en l'ordre que toca lat i lon??
+    #try:
+    origin_lat = dispatcher.user_data["lat"] #ara user_data és de type defaultdict i encara que "lat" i "lon" no existeixin, els hi assigna el valor de llista buida, pel que el codi no falla, però en teoria hauria de fallar a la funció get_shortest... i per tant el try except estaria ben fet suposo
+    origin_lon = dispatcher.user_data["lon"]
+    print(origin_lat == {}, origin_lon)
+    destination_lat, destination_lon = read_arguments(context, update) #estan en l'ordre que toca lat i lon??
 
-        # path = bcn_map.get_shortest_path_with_ispeed(origin_lat, origin_lon, destination_lat, destination_lon)
-        # bcn_map.plot_path(path)
-    except:
-        context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text='💣')
-        context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text='Comparteix la teva ubicació per poder mostrar la teva posició actual.')
+    path = bcn_map.get_shortest_path_with_ispeed(origin_lat, origin_lon, destination_lat, destination_lon)
+    fitxer = bcn_map.plot_path(path)
+
+    context.bot.send_photo( #si fem un send_photo a vegades peta perquè la foto és massa gran
+        chat_id=update.effective_chat.id,
+        photo=open(fitxer, 'rb'))
+    os.remove(fitxer)
+
+    #except:
+    context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text='💣')
+    context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text='Comparteix la teva ubicació o declara una amb /pos per poder mostrar la teva posició actual.')
+
 
 
 "Prints the current location of the user on a map."
@@ -116,7 +124,7 @@ def where(update, context):
 
 "It sets the current location of the user to the position given by him."
 def pos(update, context): #si la ubicació en directe està engegada /pos no funciona bé correctament crec, perquè les dades en directe substitueixen a les de pos
-    lat, lon = read_arguments(context, update) #estan en l'ordre que toca lat i lon??
+    lat, lon = read_arguments(context, update)
     dispatcher.user_data["lat"] = lat
     dispatcher.user_data["lon"] = lon
 
@@ -159,8 +167,8 @@ SIZE = 800
 HIGHWAYS_URL = 'https://opendata-ajuntament.barcelona.cat/data/dataset/1090983a-1c40-4609-8620-14ad49aae3ab/resource/1d6c814c-70ef-4147-aa16-a49ddb952f72/download/transit_relacio_trams.csv'
 CONGESTIONS_URL = 'https://opendata-ajuntament.barcelona.cat/data/dataset/8319c2b1-4c21-4962-9acd-6db4c5ff1148/resource/2d456eb5-4ea6-4f68-9794-2f3f1a58a933/download'
 
-#bcn_map = iGraph(PLACE, GRAPH_FILENAME, HIGHWAYS_URL, CONGESTIONS_URL) #posar-ho abans de les funcions
-#bcn_map.get_traffic()
+bcn_map = iGraph(PLACE, GRAPH_FILENAME, HIGHWAYS_URL, CONGESTIONS_URL) #posar-ho abans de les funcions
+#bcn_map.get_traffic() #per les congestions
 
 # engega el bot
 updater.start_polling()
