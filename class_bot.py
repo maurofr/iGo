@@ -6,17 +6,21 @@ import random
 from class_igo import *
 
 TOKEN_ALBERT = "1848938537:AAEImx4WFL91JFydr9FnfmUIHMuxw1YFJqY"
-TOKEN_MAURO = ""
+TOKEN_MAURO = "1609114464:AAHK86rLORDYaxcjKw9gEOy0sw_IQ04i_oY"
+
+# declara una constant amb el access token que llegeix de token.txt
+TOKEN = TOKEN_ALBERT
 
 """
 It recieves a string and it returns true if it is a float, or false otherwise.
 """
 def is_number(s): #he fet copiar pegar d'internet
-    try:
-        float(s)
-        return True
-    except ValueError:
-        return False
+    return isinstance(s, float) # això hauria de funcionar
+    #try:
+    #    float(s)
+    #    return True
+    #except ValueError:
+    #    return False
 
 """
 It reads the arguments that are passed in the 'pos' and 'go' functions. If the
@@ -131,8 +135,6 @@ def current_position(update, context):
     # envia la localització al xat del client
     context.bot.send_message(chat_id=message.chat_id, text=str((lat, lon)))
 
-# declara una constant amb el access token que llegeix de token.txt
-TOKEN = TOKEN_ALBERT
 
 # crea objectes per treballar amb Telegram
 updater = Updater(token=TOKEN, use_context=True)

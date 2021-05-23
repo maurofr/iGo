@@ -32,11 +32,13 @@ class iGraph():
         self._hways_url = highways_url
         self._cong_url = congestions_url
         self._highways = self._read_highways()
-        self._add_congestion_attribute()
+        self._add_attributes()
 
-    def _add_congestion_attribute(self):
+    def _add_attributes(self):
         networkx.set_edge_attributes(self._graph, 0, "congestion")
         networkx.set_edge_attributes(self.digraph, 0, "congestion")
+        networkx.set_edge_attributes(self._graph, 0, "itime") # crec que no el necessita
+        networkx.set_edge_attributes(self.digraph, 0, "itime")
 
     # Output methods:
     def __str__(self):
@@ -46,8 +48,6 @@ class iGraph():
             out += str(node1)
             out += str(info1)
             out += "\n"
-
-            # for each adjacent node and its information...
             for node2, edge in self.digraph.adj[node1].items():
                 out += "    Goes to node: "
                 out += str(node2)
@@ -99,14 +99,9 @@ class iGraph():
             next(reader)  # ignore first line with description
             result = [[] for _ in range(534)]
             for line in reader:
-                v = []
                 way_id, description, coordinates = line
-                v.append(way_id)
-                v.append(description)
-                v.append(coordinates)
                 result[int(way_id)-1] = self._coordinates_transform(coordinates)
-                # result.append(v)
-                # print(way_id, description, coordinates) #les tres variables són strings
+                #les tres variables són strings
 
         return result
 
@@ -122,7 +117,7 @@ class iGraph():
                 while way_id[0][i] != '#':
                     i += 1
                 result[int(way_id[0][0:i]) - 1] = way_id[0]
-                # print(way_id[0]) #way_id és de tipus list de mida 1. way_id[0] és un string
+                #way_id és de tipus list de mida 1. way_id[0] és un string
         return result
 
     def _add_traffic_data(self, route, traffic_now):
@@ -135,7 +130,7 @@ class iGraph():
                     self.digraph.edges[last_node, node]["congestion"], traffic_now)
             last_node = node
 
-    def _add_tram(self, trams, node1, node2, traffic_now):
+    def _add_tram(self, trams, node1, node2, traffic_now): # Tram en angles? xD
         try:
             route1 = osmnx.shortest_path(self.digraph, node1, node2)
             route2 = osmnx.shortest_path(self.digraph, node2, node1)
@@ -169,41 +164,20 @@ class iGraph():
 
 
     def itime(self):
-        for node1, info1 in self._graph.nodes.items():
-            # print(node1, info1) #type(info1) = dictionary, list(info1) et diu les keys que té
-            # print(graph[node1])
-            # print(info1)
-            # for each adjacent node and its information...
-            for node2, edge in self._graph.adj[node1].items():
-                if "maxspeed" in edge[0]:
-                    speed = edge[0]["maxspeed"]
-                else:
-                    speed = 1  # posar una velocitat predeterminada
-                length = edge[0]["length"]  # en teoria tots els edges tenen length
+        for edge in self.digraph.edges():
+            self.digraph.edges[edge]['itime'] = -1 # formula
+            print(self.digraph.edges[edge]['itime'])
+            print(self.digraph.edges[edge]['maxspeed'])
 
-                if "congestion" in edge[0]:
-                    print(True)  # speed = speed / algo ??
+    def get_shortest_path_with_ispeed(self, origin_lat, origin_lon, destination_lat, destination_lon):
+        self.itime()
+        origin_node = from_location_to_node(origin_lat, origin_lon)
+        destination_node = from_location_to_node(destination_lat, destination_lon)
+        path = osmnx.distance.shortest_path(self.digraph, origin_node, destination_node, weight = 'itime')
+        return path #this will return a list of lists of the nodes constituting the shortest path between each origin-destination pair. If a path cannot be solved, this will return None for that path
 
-                # print(float(length))
-                if(isinstance(speed, list)):  # hi ha speeds que són llistes
-                    print(speed)
-                # print(float(speed))
-                # print(time)
-
-                # print('    ', node2)
-                # print(edge)
-                # print('        ', list(edge[0])) #imprimeix tots els atributs dels edges
-                # print(list(graph.edges[node1, node2, 0])) #fa el mateix que la línia de sobre
-
-        def get_shortest_path_with_ispeed(self, origin_lat, origin_lon, destination_lat, destination_lon):
-            itime(self)
-            origin_node = from_location_to_node(origin_lat, origin_lon)
-            destination_node = from_location_to_node(destination_lat, destination_lon)
-            path = osmnx.distance.shortest_path(self.digraph, origin_node, destination_node, weight = 'itime')
-            return path #this will return a list of lists of the nodes constituting the shortest path between each origin-destination pair. If a path cannot be solved, this will return None for that path
-
-        def plot_path(self, path):
-            return
+    def plot_path(self, path):
+        return
 
 
 # Data
@@ -215,6 +189,7 @@ CONGESTIONS_URL = 'https://opendata-ajuntament.barcelona.cat/data/dataset/8319c2
 
 # Code
 bcn_map = iGraph(PLACE, GRAPH_FILENAME, HIGHWAYS_URL, CONGESTIONS_URL)
+bcn_map.itime()
 #bcn_map.print_graph()
 
 # print(bcn_map)
