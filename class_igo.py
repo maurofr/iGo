@@ -172,8 +172,8 @@ class iGraph():
                 speed = self.digraph.edges[edge]['maxspeed']
             else:
                 self.digraph.edges[edge]['maxspeed'] = 20 #posar una velocitat predeterminada pels carrers que no en tenen al graf
-            if(isinstance(speed, list)):  # hi ha speeds que són llistes
-                    print(self.digraph.edges[edge])
+            #if(isinstance(speed, list)):  # hi ha speeds que són llistes
+            #        print(list)
 
 
     """
@@ -194,6 +194,7 @@ class iGraph():
         last_node = -1
         for node in path:
             path_with_coordinates.append(self.digraph.nodes[node])
+            path_with_coordinates[-1]['osmid'] = node
             if last_node != -1:
                 total_time = total_time + self.digraph.edges[last_node, node]["itime"]
             last_node = node
@@ -210,18 +211,20 @@ class iGraph():
         max_y = 0
         min_y = 1000
         for node in path:
-            print(self.digraph.nodes[node])
-            if self.digraph.nodes[node]['x'] < min_x:
-                min_x = self.digraph.nodes[node]['x']
-            elif self.digraph.nodes[node]['x'] > max_x:
-                max_x = self.digraph.nodes[node]['x']
-            elif self.digraph.nodes[node]['y'] < min_y:
-                min_y = self.digraph.nodes[node]['y']
-            elif self.digraph.nodes[node]['y'] > max_y:
-                max_y = self.digraph.nodes[node]['y']
+            if node['x'] < min_x:
+                min_x = node['x']
+            elif node['x'] > max_x:
+                max_x = node['x']
+            elif node['y'] < min_y:
+                min_y = node['y']
+            elif node['y'] > max_y:
+                max_y = node['y']
         bbox = (max_y + 0.005, min_y - 0.005, max_x + 0.005, min_x - 0.005) #+-0.005 to be able to see every node/edge completely
 
-        osmnx.plot_graph_route(self._graph, path, route_color = 'r', route_linewidth = 3, route_alpha = 1, node_size = 0, bgcolor='k', bbox = bbox) #route_alpha és la opacitat, close = True perquè sinó el codi no avança
+        route = []
+        for node in path:
+            route.append(node['osmid'])
+        osmnx.plot_graph_route(self._graph, route, route_color = 'r', route_linewidth = 3, route_alpha = 1, node_size = 0, bgcolor='k', bbox = bbox) #route_alpha és la opacitat, close = True perquè sinó el codi no avança
 
 
 
@@ -234,15 +237,15 @@ CONGESTIONS_URL = 'https://opendata-ajuntament.barcelona.cat/data/dataset/8319c2
 
 
 
-# Code
-"""
+# Testing code
+
 bcn_map = iGraph(PLACE, GRAPH_FILENAME, HIGHWAYS_URL, CONGESTIONS_URL)
-bcn_map.itime()
+#bcn_map.itime()
 location1 = osmnx.geocoder.geocode("Camp Nou Barcelona")
 location2 = osmnx.geocoder.geocode("Sagrada Família Barcelona")
-path = bcn_map.get_shortest_path_with_ispeed(location1[0], location1[1], location2[0], location2[1])
+path, time = bcn_map.get_shortest_path_with_ispeed(location1[0], location1[1], location2[0], location2[1])
 bcn_map.plot_path(path)
-"""
+
 
 #bcn_map.print_graph()
 
