@@ -1,6 +1,6 @@
 # importa l'API de Telegram
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
-from staticmap import StaticMap, CircleMarker, Line
+from staticmap import StaticMap, CircleMarker, IconMarker, Line
 import os
 import random
 from class_igo import *
@@ -9,7 +9,7 @@ TOKEN_ALBERT = "1848938537:AAEImx4WFL91JFydr9FnfmUIHMuxw1YFJqY"
 TOKEN_MAURO = "1609114464:AAHK86rLORDYaxcjKw9gEOy0sw_IQ04i_oY"
 
 # declara una constant amb el access token que llegeix de token.txt
-TOKEN = TOKEN_ALBERT
+TOKEN = TOKEN_MAURO
 
 """
 It recieves a string and it returns true if it is a float, or false otherwise.
@@ -52,7 +52,7 @@ def read_arguments(context, update):
                 text='💣')
             context.bot.send_message(
                 chat_id=update.effective_chat.id,
-                text='El lloc indicat no és correcte. Siusplau, torna a escriure el lloc i comprova que el nom és correcte.') #canviar aquesta frase
+                text='El lloc indicat  no és correcte. Siusplau, torna a escriure el lloc i comprova que el nom és correcte.') #canviar aquesta frase
             return 0,0
 
 
@@ -86,8 +86,8 @@ def go(update, context):
         mapa = StaticMap(750, 750) #ajustar la mida del mapa
         mida = len(path)
 
-        mapa.add_marker(CircleMarker((path[0]['x'], path[0]['y']), 'blue', 10)) #marca el node inicial
-        mapa.add_marker(CircleMarker((path[-1]['x'], path[-1]['y']), 'blue', 10)) #marca el node final
+        mapa.add_marker(IconMarker((path[0]['x'], path[0]['y']), 'images/marker.png', 16, 32)) #marca el node inicial
+        mapa.add_marker(IconMarker((path[-1]['x'], path[-1]['y']), 'images/flag.png', 0, 22)) #marca el node final
 
         i = 0
         while i < mida-1:
@@ -123,7 +123,8 @@ def where(update, context):
         print(lat, lon)
         fitxer = "%d.png" % random.randint(1000000, 9999999)
         mapa = StaticMap(750, 750) #ajustar la mida del mapa
-        mapa.add_marker(CircleMarker((lon, lat), 'blue', 10))
+        mapa.add_marker(IconMarker((lon, lat), 'images/marker.png', 16, 32))
+        #mapa.add_marker(CircleMarker((lon, lat), 'blue', 10))
         imatge = mapa.render()
         imatge.save(fitxer)
         context.bot.send_photo(

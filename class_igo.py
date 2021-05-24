@@ -173,7 +173,7 @@ class iGraph():
             else:
                 self.digraph.edges[edge]['maxspeed'] = 20 #posar una velocitat predeterminada pels carrers que no en tenen al graf
             if(isinstance(speed, list)):  # hi ha speeds que són llistes
-                    print(speed)
+                    print(self.digraph.edges[edge])
 
 
     """
@@ -237,6 +237,7 @@ CONGESTIONS_URL = 'https://opendata-ajuntament.barcelona.cat/data/dataset/8319c2
 # Code
 """
 bcn_map = iGraph(PLACE, GRAPH_FILENAME, HIGHWAYS_URL, CONGESTIONS_URL)
+bcn_map.itime()
 location1 = osmnx.geocoder.geocode("Camp Nou Barcelona")
 location2 = osmnx.geocoder.geocode("Sagrada Família Barcelona")
 path = bcn_map.get_shortest_path_with_ispeed(location1[0], location1[1], location2[0], location2[1])
