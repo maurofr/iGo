@@ -86,8 +86,8 @@ def go(update, context):
         mapa = StaticMap(750, 750) #ajustar la mida del mapa
         mida = len(path)
 
-        mapa.add_marker(IconMarker((path[0]['x'], path[0]['y']), 'images/marker.png', 16, 32)) #marca el node inicial
-        mapa.add_marker(IconMarker((path[-1]['x'], path[-1]['y']), 'images/flag.png', 0, 22)) #marca el node final
+        mapa.add_marker(IconMarker((path[0]['x'], path[0]['y']), 'marker.png', 16, 32)) #marca el node inicial
+        mapa.add_marker(IconMarker((path[-1]['x'], path[-1]['y']), 'flag.png', 0, 22)) #marca el node final
 
         i = 0
         while i < mida-1:
@@ -123,7 +123,7 @@ def where(update, context):
         print(lat, lon)
         fitxer = "%d.png" % random.randint(1000000, 9999999)
         mapa = StaticMap(750, 750) #ajustar la mida del mapa
-        mapa.add_marker(IconMarker((lon, lat), 'images/marker.png', 16, 32))
+        mapa.add_marker(IconMarker((lon, lat), 'marker.png', 16, 32))
         #mapa.add_marker(CircleMarker((lon, lat), 'blue', 10))
         imatge = mapa.render()
         imatge.save(fitxer)
