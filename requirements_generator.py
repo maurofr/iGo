@@ -16,7 +16,7 @@ files = os.listdir(path)
 pyfiles = []
 for root, dirs, files in os.walk(path):
       for file in files:
-        if file.endswith('.py'):
+        if file.endswith('.py') and file != "requirements_generator.py":
               pyfiles.append(os.path.join(root, file))
 
 stopWords = ['from', 'import',',','.']
@@ -61,4 +61,8 @@ new_requirements = [i for i in set(new_requirements)]
 new_requirements
 
 with open(path+'/requirements.txt','w') as req:
+    req.write("#\n")
+    req.write("# Requirements file with all necessary libraries for this project\n")
+    req.write("# Run it in your shell with: pip3 install -r requirements.txt\n")
+    req.write("#\n")
     req.write(''.join(new_requirements))
