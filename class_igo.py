@@ -21,6 +21,7 @@ Congestion = collections.namedtuple('Congestion', 'tram')
 
 class iGraph():
 
+    # Init methods:
     def __init__(self, place, file, highways_url, congestions_url):
         if os.path.exists(file):
             with open(file, 'rb') as f:
@@ -34,12 +35,31 @@ class iGraph():
         self._cong_url = congestions_url
         self._highways = self._read_highways()
         self._add_attributes()
+        #for edge, key in self._graph.edges.items():
+        #    print(edge, key)
+        #    print(self._graph.edges[edge]['bearing'])
+
+    def _add_edge_bearings_digraph(self):
+        # extract edge IDs and corresponding coordinates from their nodes
+        edges = [(u, v) for u, v in self.digraph.edges if u != v]
+        x = self.digraph.nodes(data="x")
+        y = self.digraph.nodes(data="y")
+        coords = np.array([(y[u], x[u], y[v], x[v]) for u, v in edges])
+
+        # calculate bearings then set as edge attributes
+        bearings = osmnx.bearing.calculate_bearing(coords[:, 0], coords[:, 1], coords[:, 2], coords[:, 3])
+        values = zip(edges, bearings.round(1))
+        networkx.set_edge_attributes(self.digraph, dict(values), name="bearing")
 
     def _add_attributes(self):
         networkx.set_edge_attributes(self._graph, 0, "congestion")
         networkx.set_edge_attributes(self.digraph, 0, "congestion")
         networkx.set_edge_attributes(self._graph, 0, "itime") # crec que no el necessita
         networkx.set_edge_attributes(self.digraph, 0, "itime")
+        networkx.set_edge_attributes(self._graph, 0, "bearing") # Edges without a bearing are laces
+        networkx.set_edge_attributes(self.digraph, 0, "bearing")
+        osmnx.bearing.add_edge_bearings(self._graph)
+        self._add_edge_bearings_digraph() # Osmnx bearing function is only for multigraphs
 
     # Output methods:
     def __str__(self):
@@ -71,6 +91,10 @@ class iGraph():
     def print_highways(self):
         #fer algo
         return
+
+    def print_bearings(self):
+        cols = osmnx.plot.get_edge_colors_by_attr(self._graph, "bearing", num_bins=360, cmap="YlOrRd")
+        osmnx.plot_graph(self._graph, edge_color=cols, edge_linewidth=2, node_size=0)
 
     # Live data reading and processing methods:
     def _coordinates_transform(self, coordinates):
@@ -166,12 +190,14 @@ class iGraph():
     def itime(self):
         for edge in self.digraph.edges():
             self.digraph.edges[edge]['itime'] = 2 # formula
-            #print(self.digraph.edges[edge]['itime'])
-            #print(self.digraph.edges[edge]['length'])
+
             if 'maxspeed' in self.digraph.edges[edge]:
                 speed = self.digraph.edges[edge]['maxspeed']
             else:
-                self.digraph.edges[edge]['maxspeed'] = 20 #posar una velocitat predeterminada pels carrers que no en tenen al graf
+                speed = 20 #posar una velocitat predeterminada pels carrers que no en tenen al graf
+
+            # self.digraph.edges[edge]['itime'] = self.digraph.edges[edge]['length']*3.6/speed * (1+self.digraph.edges[edge]['congestion']/10)
+
             #if(isinstance(speed, list)):  # hi ha speeds que són llistes
             #        print(list)
 
@@ -238,9 +264,10 @@ CONGESTIONS_URL = 'https://opendata-ajuntament.barcelona.cat/data/dataset/8319c2
 
 
 # Testing code
-"""
 bcn_map = iGraph(PLACE, GRAPH_FILENAME, HIGHWAYS_URL, CONGESTIONS_URL)
-#bcn_map.itime()
+bcn_map.itime()
+"""
+bcn_map.print_bearings()
 location1 = osmnx.geocoder.geocode("Camp Nou Barcelona")
 location2 = osmnx.geocoder.geocode("Sagrada Família Barcelona")
 path, time = bcn_map.get_shortest_path_with_ispeed(location1[0], location1[1], location2[0], location2[1])
