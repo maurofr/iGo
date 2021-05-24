@@ -1,1 +1,13 @@
-posar llibreries i tot el que s'ha d'instal·lar
+numpy==1.19.2
+python-telegram-bot==13.5
+matplotlib==3.3.3
+urllib3==1.25.8
+fuzzywuzzy==0.18.0
+networkx==2.5.1
+sniffio==1.2.0
+nbformat==5.0.8
+haversine==2.3.0
+staticmap==0.5.5
+netifaces==0.10.4
+osmnx==1.1.0
+certifi==2019.11.28
