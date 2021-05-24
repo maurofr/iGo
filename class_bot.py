@@ -5,8 +5,6 @@ import os
 import random
 from class_igo import *
 
-from PIL import Image
-
 TOKEN_ALBERT = "1848938537:AAEImx4WFL91JFydr9FnfmUIHMuxw1YFJqY"
 TOKEN_MAURO = "1609114464:AAHK86rLORDYaxcjKw9gEOy0sw_IQ04i_oY"
 
@@ -72,47 +70,48 @@ def author(update, context):
 
 """
 Calculates the shortest path from the current location to a destination given by
-the user, and it prints the path on a map.
+the user, and it prints the path on a map. It also gives the expected time to
+go from the origin to the destination following the path.
 """
 def go(update, context):
-    #try:
-    origin_lat = dispatcher.user_data["lat"] #ara user_data és de type defaultdict i encara que "lat" i "lon" no existeixin, els hi assigna el valor de llista buida, pel que el codi no falla, però en teoria hauria de fallar a la funció get_shortest... i per tant el try except estaria ben fet suposo
-    origin_lon = dispatcher.user_data["lon"]
-    print(origin_lat == {}, origin_lon)
-    destination_lat, destination_lon = read_arguments(context, update) #estan en l'ordre que toca lat i lon??
+    try:
+        origin_lat = dispatcher.user_data["lat"] #ara user_data és de type defaultdict i encara que "lat" i "lon" no existeixin, els hi assigna el valor de llista buida, pel que el codi no falla, però en teoria hauria de fallar a la funció get_shortest... i per tant el try except estaria ben fet suposo
+        origin_lon = dispatcher.user_data["lon"]
 
-    path = bcn_map.get_shortest_path_with_ispeed(origin_lat, origin_lon, destination_lat, destination_lon)
+        destination_lat, destination_lon = read_arguments(context, update) #estan en l'ordre que toca lat i lon??
 
-    fitxer = "%d.png" % random.randint(1000000, 9999999)
-    mapa = StaticMap(750, 750) #ajustar la mida del mapa
-    mida = len(path)
-    i = 0
-    while i < mida-1:
-        mapa.add_line(Line(((path[i]['x'], path[i]['y']), (path[i+1]['x'], path[i+1]['y'])), 'blue', 3))
-        i = i + 1
-    imatge = mapa.render()
-    imatge.save(fitxer)
-    context.bot.send_photo(
-        chat_id=update.effective_chat.id,
-        photo=open(fitxer, 'rb'))
-    os.remove(fitxer)
+        path, total_time = bcn_map.get_shortest_path_with_ispeed(origin_lat, origin_lon, destination_lat, destination_lon)
 
-    """
-    fitxer = bcn_map.plot_path(path)
+        fitxer = "%d.png" % random.randint(1000000, 9999999)
+        mapa = StaticMap(750, 750) #ajustar la mida del mapa
+        mida = len(path)
 
-    context.bot.send_photo( #si fem un send_photo a vegades peta perquè la foto és massa gran
-        chat_id=update.effective_chat.id,
-        photo=open(fitxer, 'rb'))
-    os.remove(fitxer)
+        mapa.add_marker(CircleMarker((path[0]['x'], path[0]['y']), 'blue', 10)) #marca el node inicial
+        mapa.add_marker(CircleMarker((path[-1]['x'], path[-1]['y']), 'blue', 10)) #marca el node final
 
-    #except:
-    context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text='💣')
-    context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text='Comparteix la teva ubicació o declara una amb /pos per poder mostrar la teva posició actual.')
-    """
+        i = 0
+        while i < mida-1:
+            mapa.add_line(Line(((path[i]['x'], path[i]['y']), (path[i+1]['x'], path[i+1]['y'])), 'blue', 3))
+            i = i + 1
+        imatge = mapa.render()
+        imatge.save(fitxer)
+        context.bot.send_photo(
+            chat_id=update.effective_chat.id,
+            photo=open(fitxer, 'rb'))
+        os.remove(fitxer)
+
+        minutes = total_time//60
+        seconds = total_time%60
+        message = "El temps esperat és de " + str(minutes) + " minut(s), " + str(seconds) + " segon(s)."
+        context.bot.send_message(chat_id=update.effective_chat.id, text=message)
+
+    except:
+        context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text='💣')
+        context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text='Comparteix la teva ubicació o declara una amb /pos per poder mostrar la teva posició actual.')
 
 
 

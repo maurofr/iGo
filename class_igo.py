@@ -176,15 +176,28 @@ class iGraph():
                     print(speed)
 
 
+    """
+    Given origin and destination coordinates, it calculates the shortest path
+    between them. It also calculates the time needed to complete the path,
+    and it returns the path with information related to each node(such as its
+    coordinates) and the total time.
+    """
     def get_shortest_path_with_ispeed(self, origin_lat, origin_lon, destination_lat, destination_lon):
         self.itime()
         origin_node = self.from_location_to_node(origin_lat, origin_lon)
         destination_node = self.from_location_to_node(destination_lat, destination_lon)
         path = osmnx.distance.shortest_path(self.digraph, origin_node, destination_node, weight = 'itime')
-        a = []
-        for i in path:
-            a.append(self.digraph.nodes[i])
-        return a #this will return a list of lists of the nodes constituting the shortest path between each origin-destination pair. If a path cannot be solved, this will return None for that path
+
+        #now in path we have the 'number' of the nodes, but we want its coordinates, so we take each node attribute
+        total_time = 0
+        path_with_coordinates = []
+        last_node = -1
+        for node in path:
+            path_with_coordinates.append(self.digraph.nodes[node])
+            if last_node != -1:
+                total_time = total_time + self.digraph.edges[last_node, node]["itime"]
+            last_node = node
+        return path_with_coordinates, total_time #this will return a list of lists of the nodes constituting the shortest path between each origin-destination pair. If a path cannot be solved, this will return None for that path
 
     """
     Given a path that goes from one node to another, it calculates the minimum
