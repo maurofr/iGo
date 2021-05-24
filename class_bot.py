@@ -3,6 +3,7 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from staticmap import StaticMap, CircleMarker, IconMarker, Line
 import os
 import random
+import time
 from class_igo import *
 
 TOKEN_ALBERT = "1848938537:AAEImx4WFL91JFydr9FnfmUIHMuxw1YFJqY"
@@ -80,7 +81,7 @@ def go(update, context):
 
         destination_lat, destination_lon = read_arguments(context, update) #estan en l'ordre que toca lat i lon??
 
-        path, total_time = bcn_map.get_shortest_path_with_ispeed(origin_lat, origin_lon, destination_lat, destination_lon)
+        path, total_time = bcn_graph.get_shortest_path_with_ispeed(origin_lat, origin_lon, destination_lat, destination_lon)
 
         fitxer = "%d.png" % random.randint(1000000, 9999999)
         mapa = StaticMap(750, 750) #ajustar la mida del mapa
@@ -184,8 +185,17 @@ SIZE = 800
 HIGHWAYS_URL = 'https://opendata-ajuntament.barcelona.cat/data/dataset/1090983a-1c40-4609-8620-14ad49aae3ab/resource/1d6c814c-70ef-4147-aa16-a49ddb952f72/download/transit_relacio_trams.csv'
 CONGESTIONS_URL = 'https://opendata-ajuntament.barcelona.cat/data/dataset/8319c2b1-4c21-4962-9acd-6db4c5ff1148/resource/2d456eb5-4ea6-4f68-9794-2f3f1a58a933/download'
 
-bcn_map = iGraph(PLACE, GRAPH_FILENAME, HIGHWAYS_URL, CONGESTIONS_URL) #posar-ho abans de les funcions
-#bcn_map.get_traffic() #per les congestions
+bcn_graph = iGraph(PLACE, GRAPH_FILENAME, HIGHWAYS_URL, CONGESTIONS_URL) #posar-ho abans de les funcions
+#bcn_graph.get_traffic() #per les congestions
 
 # engega el bot
 updater.start_polling()
+
+while True:
+    # Cada 15 min actualitzem les congestions perque hauran variat
+    try:
+        bcn_graph.get_traffic()
+        print("Succesfully updated live traffic data")
+    except:
+        print("An error ocurred while getting live traffic data")
+    time.sleep(900)
