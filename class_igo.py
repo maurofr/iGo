@@ -209,8 +209,11 @@ class iGraph():
             else:
                 speed = 20 #posar una velocitat predeterminada pels carrers que no en tenen al graf
 
-            self.digraph.edges[edge]['itime'] = self.digraph.edges[edge]['length']*3.6/int(speed) * (1+self.digraph.edges[edge]['congestion']/10)
-            #print(self.digraph.edges[edge]['itime'])
+            if self.digraph.edges[edge]['congestion'] == 6: #the street is closed
+                self.digraph.edges[edge]['itime'] = 100000
+            else:
+                self.digraph.edges[edge]['itime'] = self.digraph.edges[edge]['length']*3.6/int(speed) * (1+self.digraph.edges[edge]['congestion']/10)
+                #print(self.digraph.edges[edge]['itime'])
 
 
 
