@@ -10,7 +10,7 @@ TOKEN_ALBERT = "1848938537:AAEImx4WFL91JFydr9FnfmUIHMuxw1YFJqY"
 TOKEN_MAURO = "1609114464:AAHK86rLORDYaxcjKw9gEOy0sw_IQ04i_oY"
 
 # declara una constant amb el access token que llegeix de token.txt
-TOKEN = TOKEN_MAURO
+TOKEN = TOKEN_ALBERT
 
 """
 It recieves a string and it returns true if it is a float, or false otherwise.
@@ -46,7 +46,7 @@ def read_arguments(context, update):
             place = place + ' Barcelona'
             location = osmnx.geocoder.geocode(place)
             return location[0], location[1]
-        except Exception as e: #crec que només hi ha excecpció quan no s'escriu res al costat de go, no, si posem campus nordBarcelona tampoc funciona
+        except Exception as e: #crec que només hi ha excepció quan no s'escriu res al costat de go, no, si posem campus nordBarcelona tampoc funciona
             print(e)
             context.bot.send_message(
                 chat_id=update.effective_chat.id,
@@ -79,16 +79,16 @@ def go(update, context):
         origin_lat = dispatcher.user_data["lat"] #ara user_data és de type defaultdict i encara que "lat" i "lon" no existeixin, els hi assigna el valor de llista buida, pel que el codi no falla, però en teoria hauria de fallar a la funció get_shortest... i per tant el try except estaria ben fet suposo
         origin_lon = dispatcher.user_data["lon"]
 
-        destination_lat, destination_lon = read_arguments(context, update) #estan en l'ordre que toca lat i lon??
+        destination_lat, destination_lon = read_arguments(context, update)
 
         path, total_time = bcn_graph.get_shortest_path_with_ispeed(origin_lat, origin_lon, destination_lat, destination_lon)
 
         fitxer = "%d.png" % random.randint(1000000, 9999999)
-        mapa = StaticMap(750, 750) #ajustar la mida del mapa
+        mapa = StaticMap(750, 750) #adjusts the size of the map
         mida = len(path)
 
-        mapa.add_marker(IconMarker((path[0]['x'], path[0]['y']), 'marker.png', 16, 32)) #marca el node inicial
-        mapa.add_marker(IconMarker((path[-1]['x'], path[-1]['y']), 'flag.png', 0, 22)) #marca el node final
+        mapa.add_marker(IconMarker((path[0]['x'], path[0]['y']), 'marker.png', 16, 32)) #highlights the origin node
+        mapa.add_marker(IconMarker((path[-1]['x'], path[-1]['y']), 'flag.png', 0, 22)) #highlights the destination node
 
         i = 0
         while i < mida-1:
@@ -103,7 +103,7 @@ def go(update, context):
 
         minutes = total_time//60
         seconds = total_time%60
-        message = "El temps esperat és de " + str(minutes) + " minut(s), " + str(seconds) + " segon(s)."
+        message = "El temps esperat és de " + str(minutes) + " minut(s), " + str(round(seconds, 2)) + " segon(s)."
         context.bot.send_message(chat_id=update.effective_chat.id, text=message)
 
     except:
@@ -123,7 +123,7 @@ def where(update, context):
         lon = dispatcher.user_data["lon"]
         print(lat, lon)
         fitxer = "%d.png" % random.randint(1000000, 9999999)
-        mapa = StaticMap(750, 750) #ajustar la mida del mapa
+        mapa = StaticMap(750, 750) #adjusts the size of the map
         mapa.add_marker(IconMarker((lon, lat), 'marker.png', 16, 32))
         #mapa.add_marker(CircleMarker((lon, lat), 'blue', 10))
         imatge = mapa.render()
@@ -186,16 +186,18 @@ HIGHWAYS_URL = 'https://opendata-ajuntament.barcelona.cat/data/dataset/1090983a-
 CONGESTIONS_URL = 'https://opendata-ajuntament.barcelona.cat/data/dataset/8319c2b1-4c21-4962-9acd-6db4c5ff1148/resource/2d456eb5-4ea6-4f68-9794-2f3f1a58a933/download'
 
 bcn_graph = iGraph(PLACE, GRAPH_FILENAME, HIGHWAYS_URL, CONGESTIONS_URL) #posar-ho abans de les funcions
-#bcn_graph.get_traffic() #per les congestions
+bcn_graph.get_traffic() #we get the congestions
+bcn_graph.itime()
 
-# engega el bot
+
+# it starts the bot
 updater.start_polling()
 
 while True:
-    # Cada 15 min actualitzem les congestions perque hauran variat
+    # every 5 minutes the congestions are updated, because they could have changed
     try:
         bcn_graph.get_traffic()
-        print("Succesfully updated live traffic data")
+        print("Succesfully updated live traffic data") #hauríem de fer que també s'actualitzés el mapa, no?, o fer-ho cada minut lo del mapa
     except:
         print("An error ocurred while getting live traffic data")
-    time.sleep(900)
+    time.sleep(300)

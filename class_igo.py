@@ -189,24 +189,37 @@ class iGraph():
 
     def itime(self):
         for edge in self.digraph.edges():
-            self.digraph.edges[edge]['itime'] = 2 # formula
+            #self.digraph.edges[edge]['itime'] = 2 # formula
 
             if 'maxspeed' in self.digraph.edges[edge]:
                 speed = self.digraph.edges[edge]['maxspeed']
+                if(isinstance(speed, list)):  # hi ha speeds que són llistes
+                        min = 1000
+                        max = 0 #we have found that the majority of edges with lists are little streets with [20,30]. There are also major streets, that's why if speed > 50 we choose the greatest speed, because there are more probabilities of having a tram there and therefore its congestion
+                        for gg in speed: #all the speeds are integers
+                            if int(gg) > max:
+                                max = int(gg)
+                            if int(gg) < min:
+                                min = int(gg)
+                        if max > 50:
+                            speed = max
+                        else:
+                            speed = min
+
             else:
                 speed = 20 #posar una velocitat predeterminada pels carrers que no en tenen al graf
 
-            # self.digraph.edges[edge]['itime'] = self.digraph.edges[edge]['length']*3.6/speed * (1+self.digraph.edges[edge]['congestion']/10)
+            self.digraph.edges[edge]['itime'] = self.digraph.edges[edge]['length']*3.6/int(speed) * (1+self.digraph.edges[edge]['congestion']/10)
+            #print(self.digraph.edges[edge]['itime'])
 
-            #if(isinstance(speed, list)):  # hi ha speeds que són llistes
-            #        print(list)
+
 
 
     """
     Given origin and destination coordinates, it calculates the shortest path
-    between them. It also calculates the time needed to complete the path,
-    and it returns the path with information related to each node(such as its
-    coordinates) and the total time.
+    between them taking into account the 'itime' attribute. It also calculates
+    the time needed to complete the path, and it returns the path with
+    information related to each node(such as its coordinates) and the total time.
     """
     def get_shortest_path_with_ispeed(self, origin_lat, origin_lon, destination_lat, destination_lon):
         self.itime()
@@ -264,8 +277,8 @@ CONGESTIONS_URL = 'https://opendata-ajuntament.barcelona.cat/data/dataset/8319c2
 
 
 # Testing code
-bcn_map = iGraph(PLACE, GRAPH_FILENAME, HIGHWAYS_URL, CONGESTIONS_URL)
-bcn_map.itime()
+#bcn_map = iGraph(PLACE, GRAPH_FILENAME, HIGHWAYS_URL, CONGESTIONS_URL)
+#bcn_map.itime()
 """
 bcn_map.print_bearings()
 location1 = osmnx.geocoder.geocode("Camp Nou Barcelona")
