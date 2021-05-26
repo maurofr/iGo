@@ -88,10 +88,6 @@ class iGraph():
         ec = osmnx.plot.get_edge_colors_by_attr(self._graph, "congestion", cmap="YlOrRd")
         osmnx.plot_graph(self._graph, edge_color=ec, edge_linewidth=2, node_size=0)
 
-    def print_highways(self):
-        #fer algo
-        return
-
     def print_bearings(self):
         cols = osmnx.plot.get_edge_colors_by_attr(self._graph, "bearing", num_bins=360, cmap="YlOrRd")
         osmnx.plot_graph(self._graph, edge_color=cols, edge_linewidth=2, node_size=0)
@@ -194,17 +190,11 @@ class iGraph():
             if 'maxspeed' in self.digraph.edges[edge]:
                 speed = self.digraph.edges[edge]['maxspeed']
                 if(isinstance(speed, list)):  # hi ha speeds que són llistes
-                        min = 1000
                         max = 0 #we have found that the majority of edges with lists are little streets with [20,30]. There are also major streets, that's why if speed > 50 we choose the greatest speed, because there are more probabilities of having a tram there and therefore its congestion
                         for gg in speed: #all the speeds are integers
-                            if int(gg) > max:
-                                max = int(gg)
                             if int(gg) < min:
                                 min = int(gg)
-                        if max > 50:
-                            speed = max
-                        else:
-                            speed = min
+                        speed = min
 
             else:
                 speed = 20 #posar una velocitat predeterminada pels carrers que no en tenen al graf
@@ -212,10 +202,10 @@ class iGraph():
             if self.digraph.edges[edge]['congestion'] == 6: #the street is closed
                 self.digraph.edges[edge]['itime'] = 100000
             else:
-                self.digraph.edges[edge]['itime'] = self.digraph.edges[edge]['length']*3.6/int(speed) * (1+self.digraph.edges[edge]['congestion']/10)
+                self.digraph.edges[edge]['itime'] = self.digraph.edges[edge]['length']*3.6/int(speed)
+                self.digraph.edges[edge]['itime'] *= (1+self.digraph.edges[edge]['congestion']/5)**2
+                self.digraph.edges[edge]['itime'] += 10
                 #print(self.digraph.edges[edge]['itime'])
-
-
 
 
     """
