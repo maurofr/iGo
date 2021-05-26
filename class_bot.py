@@ -59,14 +59,9 @@ def read_arguments(context, update):
 
 """It starts the chat with the user."""
 def start(update, context):
-    print(update)
-    print(context)
-    botname = context.bot.username
-    username = update.effective_chat.username
+    id = update.effective_chat.id
     fullname = update.effective_chat.first_name + ' ' + update.effective_chat.last_name
-    missatge = "Tu ets en %s (%s) i jo soc el %s." % (fullname, username, botname)
-    context.bot.send_message(chat_id=update.effective_chat.id, text=missatge)
-    context.bot.send_message(chat_id=update.effective_chat.id, text="Hola! Soc un bot bàsic. Envia la teva ubicació en directe per fer funcionar el bot.")
+    context.bot.send_message(chat_id=update.effective_chat.id, text="Hola %s! Soc un bot bàsic. Envia la teva ubicació en directe per fer funcionar el bot." %(fullname))
 
 """It explains all the available functions and what they do."""
 def help(update, context):
@@ -82,9 +77,12 @@ the user, and it prints the path on a map. It also gives the expected time to
 go from the origin to the destination following the path.
 """
 def go(update, context):
+    id = update.effective_chat.id
     try:
-        origin_lat = dispatcher.user_data["lat"] #ara user_data és de type defaultdict i encara que "lat" i "lon" no existeixin, els hi assigna el valor de llista buida, pel que el codi no falla, però en teoria hauria de fallar a la funció get_shortest... i per tant el try except estaria ben fet suposo
-        origin_lon = dispatcher.user_data["lon"]
+        origin_lat = people[id][0]
+        origin_lon = people[id][1]
+        #origin_lat = dispatcher.user_data["lat"] #ara user_data és de type defaultdict i encara que "lat" i "lon" no existeixin, els hi assigna el valor de llista buida, pel que el codi no falla, però en teoria hauria de fallar a la funció get_shortest... i per tant el try except estaria ben fet suposo
+        #origin_lon = dispatcher.user_data["lon"]
 
         destination_lat, destination_lon = read_arguments(context, update)
 
@@ -115,21 +113,28 @@ def go(update, context):
 
     except Exception as e:
         print(e)
-        context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text='💣')
-        context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text='Comparteix la teva ubicació o declara una amb /pos per poder mostrar la teva posició actual.')
+        if e == TypeError:
+            context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text='No estàs a cap posició!')
+        else:
+            context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text='💣')
+            context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text='El lloc que has posat no és correcte.')
 
 
 
 "Prints the current location of the user on a map."
 def where(update, context):
+    id = update.effective_chat.id
     try:
-        lat = dispatcher.user_data["lat"]
-        lon = dispatcher.user_data["lon"]
-        print(lat, lon)
+        lat = people[id][0]
+        lon = people[id][1]
+        #lat = dispatcher.user_data["lat"]
+        #lon = dispatcher.user_data["lon"]
         fitxer = "%d.png" % random.randint(1000000, 9999999)
         mapa = StaticMap(750, 750) #adjusts the size of the map
         mapa.add_marker(IconMarker((lon, lat), 'marker.png', 16, 32))
@@ -150,12 +155,15 @@ def where(update, context):
 
 "It sets the current location of the user to the position given by him."
 def pos(update, context): #si la ubicació en directe està engegada /pos no funciona bé correctament crec, perquè les dades en directe substitueixen a les de pos
+    id = update.effective_chat.id
     lat, lon = read_arguments(context, update)
-    dispatcher.user_data["lat"] = lat
-    dispatcher.user_data["lon"] = lon
+    people[id] = (lat, lon)
+    #dispatcher.user_data["lat"] = lat
+    #dispatcher.user_data["lon"] = lon
 
 
 def current_position(update, context):
+    id = update.effective_chat.id
     '''aquesta funció es crida cada cop que arriba una nova localització d'un usuari'''
 
     # aquí, els missatges són rars: el primer és de debò, els següents són edicions
@@ -163,8 +171,9 @@ def current_position(update, context):
     # extreu la localització del missatge
     lat, lon = message.location.latitude, message.location.longitude
     # escriu la localització al servidor
-    dispatcher.user_data["lat"] = lat
-    dispatcher.user_data["lon"] = lon
+    people[id] = (lat, lon)
+    #dispatcher.user_data["lat"] = lat
+    #dispatcher.user_data["lon"] = lon
     print("actualització = ",lat, lon)
     # envia la localització al xat del client
     context.bot.send_message(chat_id=message.chat_id, text=str((lat, lon)))
@@ -200,6 +209,7 @@ bcn_graph = iGraph(PLACE, GRAPH_FILENAME, HIGHWAYS_URL, CONGESTIONS_URL) #posar-
 
 # it starts the bot
 updater.start_polling()
+people = {} #it is a dictionary with key the id of the user, and attributes the latitude and longitude of its position
 
 while True:
     # every 5 minutes the congestions are updated, because they could have changed
