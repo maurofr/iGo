@@ -59,6 +59,13 @@ def read_arguments(context, update):
 
 """It starts the chat with the user."""
 def start(update, context):
+    print(update)
+    print(context)
+    botname = context.bot.username
+    username = update.effective_chat.username
+    fullname = update.effective_chat.first_name + ' ' + update.effective_chat.last_name
+    missatge = "Tu ets en %s (%s) i jo soc el %s." % (fullname, username, botname)
+    context.bot.send_message(chat_id=update.effective_chat.id, text=missatge)
     context.bot.send_message(chat_id=update.effective_chat.id, text="Hola! Soc un bot bàsic. Envia la teva ubicació en directe per fer funcionar el bot.")
 
 """It explains all the available functions and what they do."""
@@ -106,7 +113,8 @@ def go(update, context):
         message = "El temps esperat és de " + str(minutes) + " minut(s), " + str(round(seconds, 2)) + " segon(s)."
         context.bot.send_message(chat_id=update.effective_chat.id, text=message)
 
-    except:
+    except Exception as e:
+        print(e)
         context.bot.send_message(
             chat_id=update.effective_chat.id,
             text='💣')
@@ -186,8 +194,8 @@ HIGHWAYS_URL = 'https://opendata-ajuntament.barcelona.cat/data/dataset/1090983a-
 CONGESTIONS_URL = 'https://opendata-ajuntament.barcelona.cat/data/dataset/8319c2b1-4c21-4962-9acd-6db4c5ff1148/resource/2d456eb5-4ea6-4f68-9794-2f3f1a58a933/download'
 
 bcn_graph = iGraph(PLACE, GRAPH_FILENAME, HIGHWAYS_URL, CONGESTIONS_URL) #posar-ho abans de les funcions
-bcn_graph.get_traffic() #we get the congestions
-bcn_graph.itime()
+#bcn_graph.get_traffic() #we get the congestions
+#bcn_graph.itime()
 
 
 # it starts the bot

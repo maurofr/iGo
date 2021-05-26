@@ -190,7 +190,7 @@ class iGraph():
             if 'maxspeed' in self.digraph.edges[edge]:
                 speed = self.digraph.edges[edge]['maxspeed']
                 if(isinstance(speed, list)):  # hi ha speeds que són llistes
-                        max = 0 #we have found that the majority of edges with lists are little streets with [20,30]. There are also major streets, that's why if speed > 50 we choose the greatest speed, because there are more probabilities of having a tram there and therefore its congestion
+                        min = 1000000 #we have found that the majority of edges with lists are little streets with [20,30]. There are also major streets, that's why if speed > 50 we choose the greatest speed, because there are more probabilities of having a tram there and therefore its congestion
                         for gg in speed: #all the speeds are integers
                             if int(gg) < min:
                                 min = int(gg)
