@@ -16,25 +16,29 @@ GRAPH_FILENAME = 'barcelona.graph'
 SIZE = 800
 HIGHWAYS_URL = 'https://opendata-ajuntament.barcelona.cat/data/dataset/1090983a-1c40-4609-8620-14ad49aae3ab/resource/1d6c814c-70ef-4147-aa16-a49ddb952f72/download/transit_relacio_trams.csv'
 CONGESTIONS_URL = 'https://opendata-ajuntament.barcelona.cat/data/dataset/8319c2b1-4c21-4962-9acd-6db4c5ff1148/resource/2d456eb5-4ea6-4f68-9794-2f3f1a58a933/download'
+TRAFFIC_COLORS = ['blue', 'yellow', 'orange', 'red', 'purple', 'black', 'black']
 
-"""
-It recieves a string and it returns true if it is a float, or false otherwise.
-"""
+people = {} #it is a dictionary with key the id of the user, and attributes the latitude and longitude of its position
+positions = {} #dictionary with id as keys, every id containing a dictionary with the name of a place as id and its coordinates as attributes
+
 def is_number(s):
+    """
+    It recieves a string and it returns true if it could be a float, and false otherwise.
+    """
     try:
         float(s)
         return True
     except ValueError:
         return False
 
-"""
-It reads the arguments that are passed in the 'pos', 'go' and 'set' functions.
-If the attributes received are coordinates, it returns their value. Otherwise,
-it trasforms the name of a place to its coordinates. If the attribute received
-is not correct, or if there isn't an attribute, the function returns an error
-and it explains why it failed.
-"""
 def read_arguments(context, update):
+    """
+    It reads the arguments that are passed in the 'pos', 'go' and 'set' functions.
+    If the attributes received are coordinates, it returns their value. Otherwise,
+    it trasforms the name of a place to its coordinates. If the attribute received
+    is not correct, or if there isn't an attribute, the function returns an error
+    and it explains why it failed.
+    """
     place = ""
     is_coordinates = True
     coordinates = []
@@ -85,7 +89,7 @@ def go(update, context):
         origin_lat = people[id][0]
         origin_lon = people[id][1]
 
-        if [context.args[0] in positions[id]]: #the place the user wants to go is a 'set' placed
+        if id in positions and context.args[0] in positions[id]: #the place the user wants to go is a 'set' place
             destination_lat = positions[id][context.args[0]][0]
             destination_lon = positions[id][context.args[0]][1]
         else:
@@ -102,7 +106,8 @@ def go(update, context):
 
         i = 0
         while i < path_size-1: #it draws the path on the map
-            map.add_line(Line(((path[i]['x'], path[i]['y']), (path[i+1]['x'], path[i+1]['y'])), 'blue', 3))
+            congestion = bcn_graph.digraph.edges[path[i]['node_id'], path[i+1]['node_id']]['congestion']
+            map.add_line(Line(((path[i]['x'], path[i]['y']), (path[i+1]['x'], path[i+1]['y'])), TRAFFIC_COLORS[congestion], 3))
             i = i + 1
         image = map.render()
         image.save(file)
@@ -119,8 +124,6 @@ def go(update, context):
         context.bot.send_message(
             chat_id=update.effective_chat.id,
             text='You are not in a position!')
-
-
 
 
 "Prints the current location of the user on a map."
@@ -146,15 +149,24 @@ def where(update, context):
             chat_id=update.effective_chat.id,
             text='Share your current position or use /pos to be able to show the position on a map!.')
 
+
 "It sets the current location of the user to the position given by him."
 def pos(update, context):
     id = update.effective_chat.id
-    if [context.args[0] in positions[id]]: #if the place where the user is located is a 'set' placed
+    if id in positions and context.args[0] in positions[id]: #if the place where the user is located is a 'set' placed
         lat = positions[id][context.args[0]][0]
         lon = positions[id][context.args[0]][1]
     else:
         lat, lon = read_arguments(context, update)
     people[id] = (lat, lon)
+    
+    place = ""
+    for word in context.args:
+        place += " "
+        place += word
+    context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text='You are now in' + place)
 
 
 def set(update, context):
@@ -162,18 +174,25 @@ def set(update, context):
     key = context.args[0]
     context.args.remove(key)
     lat, lon = read_arguments(context, update)
-    try:
-        a = positions[id]
-    except: #positions[id] is empty
+    if not id in positions:
         positions[id] = {} #we declare positions[id] as a dictionary if it is empty
     positions[id][key] = (lat,lon)
+    context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="Succesfully saved '" + key + "' as a location.")
+
 
 def print_places(update, context):
     id = update.effective_chat.id
-    for key in positions[id].items():
+    if id in positions:
+        for key in positions[id].items():
+            context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=key[0] + '(' + str(key[1][0]) + ',' + str(key[1][1]) + ')')
+    else:
         context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text=key[0] + '(' + str(key[1][0]) + ',' + str(key[1][1]) + ')')
+            text="There are no saved locations. You can save one with /set, for more info see /help.")
 
 
 def current_position(update, context):
@@ -199,18 +218,22 @@ dispatcher.add_handler(CommandHandler('set', set))
 dispatcher.add_handler(CommandHandler('print_places', print_places))
 dispatcher.add_handler(MessageHandler(Filters.location, current_position))
 
-
+print("Starting the bot, please wait a few seconds...")
 bcn_graph = iGraph(PLACE, GRAPH_FILENAME, HIGHWAYS_URL, CONGESTIONS_URL) #posar-ho abans de les funcions
+try:
+    bcn_graph.get_traffic()
+except:
+    print("Could not retrieve live traffic data")
+
 # it starts the bot
 updater.start_polling()
-people = {} #it is a dictionary with key the id of the user, and attributes the latitude and longitude of its position
-positions = {} #dictionary with id as keys, every id containing a dictionary with the name of a place as id and its coordinates as attributes
+print("The bot is now operative")
 
 while True:
     # every 5 minutes the congestions are updated, because they could have changed
+    time.sleep(300)
     try:
         bcn_graph.get_traffic()
         print("Succesfully updated live traffic data") #hauríem de fer que també s'actualitzés el mapa, no?, o fer-ho cada minut lo del mapa
     except:
         print("An error ocurred while getting live traffic data")
-    time.sleep(300)

@@ -11,10 +11,6 @@ import numpy as np
 import os
 import random
 
-# This is what an implementation of the code with a class would look like.
-# It still has to be finished, but gives an idea of how it can be beneficial
-# with respect to an "only-functions" implementation.
-
 Highway = collections.namedtuple('Highway', 'tram')  # Tram
 Congestion = collections.namedtuple('Congestion', 'tram')
 
@@ -31,13 +27,12 @@ class iGraph():
             self.digraph = osmnx.utils_graph.get_digraph(graph, weight='length')
             with open(file, 'wb') as f:
                 pickle.dump([self.graph, self.digraph], f)
-        self._hways_url = highways_url
-        self._cong_url = congestions_url
+        self._highways_url = highways_url
+        self._congestions_url = congestions_url
         self._highways = self._read_highways()
         self._add_attributes()
-        #for edge, key in self._graph.edges.items():
-        #    print(edge, key)
-        #    print(self._graph.edges[edge]['bearing'])
+        self._highways_nodes = []  # Vector amb els trams de la via pública
+        self._define_highways_nodes()
 
     def _add_edge_bearings_digraph(self):
         # extract edge IDs and corresponding coordinates from their nodes
@@ -60,6 +55,27 @@ class iGraph():
         networkx.set_edge_attributes(self.digraph, 0, "bearing")
         osmnx.bearing.add_edge_bearings(self._graph)
         self._add_edge_bearings_digraph() # Osmnx bearing function is only for multigraphs
+
+
+    def _add_highway(self, node1, node2): # Tram en angles? xD
+        try:
+            route1 = osmnx.shortest_path(self.digraph, node1, node2)
+            route2 = osmnx.shortest_path(self.digraph, node2, node1)
+            self._highways_nodes.append([route1, route2])
+        except:
+            self._highways_nodes.append([])
+
+    def _define_highways_nodes(self):
+        for i in range(534):
+            v = self._highways[i]
+            if len(v) != 0:
+                node1 = osmnx.distance.nearest_nodes(self.digraph, v[0][0], v[0][1])
+                node2 = osmnx.distance.nearest_nodes(self.digraph, v[-1][0], v[-1][1])
+                self._add_highway(node1, node2)
+            else:
+                self._highways_nodes.append([])
+            self._print_progress_bar(i+1, 534)
+        print() # New line after progress bar
 
     # Output methods:
     def __str__(self):
@@ -92,6 +108,25 @@ class iGraph():
         cols = osmnx.plot.get_edge_colors_by_attr(self._graph, "bearing", num_bins=360, cmap="YlOrRd")
         osmnx.plot_graph(self._graph, edge_color=cols, edge_linewidth=2, node_size=0)
 
+    def _print_progress_bar(self, iteration, total):
+        """
+        Prints a progress bar for the iterations of a loop.
+        @params:
+            iteration   - Required  : current iteration (Int)
+            total       - Required  : total iterations (Int)
+            prefix      - Optional  : prefix string (Str)
+            suffix      - Optional  : suffix string (Str)
+            decimals    - Optional  : positive number of decimals in percent complete (Int)
+            length      - Optional  : character length of bar (Int)
+            fill        - Optional  : bar fill character (Str)
+            printEnd    - Optional  : end character (e.g. "\r", "\r\n") (Str)
+        """
+        fill = '█'
+        percent = ("{0:." + str(1) + "f}").format(100 * (iteration / float(total)))
+        filledLength = int(100 * iteration // total)
+        bar = fill * filledLength + '-' * (100 - filledLength)
+        print(f'\r |{bar}| {percent}% ', end="\r")
+
     # Live data reading and processing methods:
     def _coordinates_transform(self, coordinates):
         """transforms coordinates from a string into a vector
@@ -114,7 +149,7 @@ class iGraph():
         return v
 
     def _read_highways(self):
-        with urllib.request.urlopen(self._hways_url) as response:
+        with urllib.request.urlopen(self._highways_url) as response:
             lines = [l.decode('utf-8') for l in response.readlines()]
             reader = csv.reader(lines, delimiter=',', quotechar='"')
             next(reader)  # ignore first line with description
@@ -127,7 +162,7 @@ class iGraph():
         return result
 
     def _read_congestions(self):
-        with urllib.request.urlopen(self._cong_url) as response:
+        with urllib.request.urlopen(self._congestions_url) as response:
             lines = [l.decode('utf-8') for l in response.readlines()]
             reader = csv.reader(lines, delimiter=',', quotechar='"')
             # next(reader)  # ignore first line with description   en aquest cas la primera linia no s'ha d'ignorar
@@ -141,40 +176,24 @@ class iGraph():
                 #way_id és de tipus list de mida 1. way_id[0] és un string
         return result
 
-    def _add_traffic_data(self, route, traffic_now):
-        last_node = -1
-        for node in route:
-            if last_node != -1:
-                self._graph.edges[last_node, node, 0]["congestion"] = max(
-                    self._graph.edges[last_node, node, 0]["congestion"], traffic_now)
-                self.digraph.edges[last_node, node]["congestion"] = max(
-                    self.digraph.edges[last_node, node]["congestion"], traffic_now)
-            last_node = node
-
-    def _add_tram(self, trams, node1, node2, traffic_now): # Tram en angles? xD
-        try:
-            route1 = osmnx.shortest_path(self.digraph, node1, node2)
-            route2 = osmnx.shortest_path(self.digraph, node2, node1)
-            trams.append(route1)
-            self._add_traffic_data(route1, traffic_now)
-            self._add_traffic_data(route2, traffic_now)
-            trams.append(route2)
-        except:
-            pass
+    def _update_traffic_data(self, traffic_now, tram):
+        for route in tram:
+            last_node = -1
+            for node in route:
+                if last_node != -1:
+                    self._graph.edges[last_node, node, 0]["congestion"] = traffic_now
+                    self.digraph.edges[last_node, node]["congestion"] = traffic_now
+                last_node = node
 
     def get_traffic(self):
         congestions = self._read_congestions()
 
-        trams = []  # Vector amb els trams de la via pública
         for i in range(534):
-            v = self._highways[i]
             c = congestions[i]
-            if len(v) != 0 and len(c) != 0:
-                node1 = osmnx.distance.nearest_nodes(self.digraph, v[0][0], v[0][1])
-                node2 = osmnx.distance.nearest_nodes(self.digraph, v[-1][0], v[-1][1])
+            if len(c) != 0:
                 traffic_now = int(c[-3])
                 traffic_later = int(c[-1])
-                self._add_tram(trams, node1, node2, traffic_now)
+                self._update_traffic_data(traffic_now, self._highways_nodes[i])
 
     # Other methods:
     """Receives the coordinates of a location and it returns its nearest node of the graph."""
@@ -195,7 +214,6 @@ class iGraph():
                             if int(gg) < min:
                                 min = int(gg)
                         speed = min
-
             else:
                 speed = 20 #posar una velocitat predeterminada pels carrers que no en tenen al graf
 
@@ -226,7 +244,7 @@ class iGraph():
         last_node = -1
         for node in path:
             path_with_coordinates.append(self.digraph.nodes[node])
-            path_with_coordinates[-1]['osmid'] = node
+            path_with_coordinates[-1]['node_id'] = node
             if last_node != -1:
                 total_time = total_time + self.digraph.edges[last_node, node]["itime"]
             last_node = node
