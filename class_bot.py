@@ -1,5 +1,6 @@
 # imports the Telegram's API
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 from staticmap import StaticMap, CircleMarker, IconMarker, Line
 import os
 import random
@@ -62,28 +63,45 @@ def read_arguments(context, update):
                 chat_id=update.effective_chat.id,
                 text='The place indicated is not correct. Please, write it again and check that the address is correct.')
 
-
-
-"""It starts the chat with the user."""
 def start(update, context):
+    """It starts the chat with the user."""
     id = update.effective_chat.id
     fullname = update.effective_chat.first_name + ' ' + update.effective_chat.last_name
     context.bot.send_message(chat_id=update.effective_chat.id, text="Hi %s! I am the GuiderBot. Try the /help command to know more about me and my functions!" %(fullname))
 
-"""It explains all the available functions and what they do."""
 def help(update, context):
-    context.bot.send_message(chat_id=update.effective_chat.id, text="Explicar comandes disponibles.")
+    """It explains all the available functions and what they do."""
+    bot_info = ["You can execute the following commands:"]
+    bot_info.append("/start - Say hi to the bot, he will reply back!")
+    bot_info.append("/author - It will be displayed the name of the authors and a link to the GitHub repository.")
+    bot_info.append("/go destination - You will receive an optimal route to your destination calculated with iGo.")
+    bot_info.append("/where - You will receive a small map of your current location.")
+    bot_info.append("/set name place - Save a place you usually go to with a name (only 1 word). This way you can /go name !")
+    bot_info.append("/myplaces - Sends a list of your saved places.")
 
-"""It shows the name of the authors of this project."""
+    msg = "\n".join(bot_info)
+    context.bot.send_message(chat_id=update.effective_chat.id,
+                             text=msg)
+
+
 def author(update, context):
-    context.bot.send_message(chat_id=update.effective_chat.id, text="The authors of this project are Mauro Filomeno and Albert Fugardo.")
+    """
+    It shows the name of the authors of this project and the GitHub link.
+    (The GitHub repository will be private until the 1st of June of 2021)
+    """
+    keyboard = [[InlineKeyboardButton("GitHub", url="https://github.com/maurofr/iGo")]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    context.bot.send_message(chat_id=update.effective_chat.id,
+                             text="The authors of this project are Mauro Filomeno and Albert Fugardo, you can see the full code in GitHub.",
+                             reply_markup=reply_markup)
 
-"""
-It calculates the shortest path from the current location to a destination given by
-the user, and it prints the path on a map. It also gives the expected time to
-go from the origin to the destination following the path.
-"""
+
 def go(update, context):
+    """
+    It calculates the shortest path from the current location to a destination given by
+    the user, and it prints the path on a map. It also gives the expected time to
+    go from the origin to the destination following the path.
+    """
     id = update.effective_chat.id
     try:
         origin_lat = people[id][0]
@@ -126,8 +144,8 @@ def go(update, context):
             text='You are not in a position!')
 
 
-"Prints the current location of the user on a map."
 def where(update, context):
+    """Prints the current location of the user on a map."""
     id = update.effective_chat.id
     try:
         lat = people[id][0]
@@ -150,8 +168,8 @@ def where(update, context):
             text='Share your current position or use /pos to be able to show the position on a map!.')
 
 
-"It sets the current location of the user to the position given by him."
 def pos(update, context):
+    """It sets the current location of the user to the position given by him."""
     id = update.effective_chat.id
     if id in positions and context.args[0] in positions[id]: #if the place where the user is located is a 'set' placed
         lat = positions[id][context.args[0]][0]
@@ -159,7 +177,7 @@ def pos(update, context):
     else:
         lat, lon = read_arguments(context, update)
     people[id] = (lat, lon)
-    
+
     place = ""
     for word in context.args:
         place += " "
@@ -188,7 +206,18 @@ def print_places(update, context):
         for key in positions[id].items():
             context.bot.send_message(
                 chat_id=update.effective_chat.id,
-                text=key[0] + '(' + str(key[1][0]) + ',' + str(key[1][1]) + ')')
+                text=key[0] + ':')
+            lat = key[1][0]
+            lon = key[1][1]
+            file = "%d.png" % random.randint(1000000, 9999999)
+            mapa = StaticMap(SIZE, SIZE) #adjusts the size of the map
+            mapa.add_marker(IconMarker((lon, lat), 'house.png', 16, 32))
+            image = mapa.render()
+            image.save(file)
+            context.bot.send_photo(
+                chat_id=update.effective_chat.id,
+                photo=open(file, 'rb'))
+            os.remove(file)
     else:
         context.bot.send_message(
             chat_id=update.effective_chat.id,
@@ -196,7 +225,7 @@ def print_places(update, context):
 
 
 def current_position(update, context):
-    '''this function is called every time we get a new location of a user'''
+    """this function is called every time we get a new location of a user"""
     id = update.effective_chat.id
     message = update.edited_message if update.edited_message else update.message
     lat, lon = message.location.latitude, message.location.longitude
@@ -215,7 +244,7 @@ dispatcher.add_handler(CommandHandler('go', go))
 dispatcher.add_handler(CommandHandler('where', where))
 dispatcher.add_handler(CommandHandler('pos', pos))
 dispatcher.add_handler(CommandHandler('set', set))
-dispatcher.add_handler(CommandHandler('print_places', print_places))
+dispatcher.add_handler(CommandHandler('myplaces', print_places))
 dispatcher.add_handler(MessageHandler(Filters.location, current_position))
 
 print("Starting the bot, please wait a few seconds...")
