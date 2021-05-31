@@ -1,4 +1,3 @@
-# imports the Telegram's API
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 from staticmap import StaticMap, CircleMarker, IconMarker, Line

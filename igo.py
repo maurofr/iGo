@@ -199,7 +199,7 @@ class iGraph():
             osmnx.plot_graph(self._graph, edge_color=ec, edge_linewidth=2, node_size=0)
         except:
             print("There is no display to plot the graph. Saved as congestions_plot.png")
-            osmnx.plot_graph(self._graph, edge_color=ec, edge_linewidth=2, node_size=0, \
+            osmnx.plot_graph(self._graph, edge_color=ec, edge_linewidth=2, node_size=0,
                              show=False, save=True, filepath='congestions_plot.png')
 
     def print_bearings(self):
@@ -217,7 +217,7 @@ class iGraph():
                 osmnx.plot_graph(self._graph, edge_color=cols, edge_linewidth=2, node_size=0)
             except:
                 print("There is no display to plot the graph. Saved as bearings_plot.png")
-                osmnx.plot_graph(self._graph, edge_color=cols, edge_linewidth=2, node_size=0, \
+                osmnx.plot_graph(self._graph, edge_color=cols, edge_linewidth=2, node_size=0,
                                  show=False, save=True, filepath='bearings_plot.png')
 
     def print_path(self, path):
@@ -249,12 +249,12 @@ class iGraph():
         for node in path:
             route.append(node['osmid'])
         try:
-            osmnx.plot_graph_route(self._graph, route, route_color='r', route_linewidth=3, \
+            osmnx.plot_graph_route(self._graph, route, route_color='r', route_linewidth=3,
                                    route_alpha=1, node_size=0, bgcolor='k', bbox=bbox)
         except:
             print("There is no display to plot the graph. Saved as path_plot.png")
-            osmnx.plot_graph(self._graph, route, route_color='r', route_linewidth=3, \
-                             route_alpha=1, node_size=0, bgcolor='k', bbox=bbox, \
+            osmnx.plot_graph(self._graph, route, route_color='r', route_linewidth=3,
+                             route_alpha=1, node_size=0, bgcolor='k', bbox=bbox,
                              show=False, save=True, filepath='bearings_plot.png')
 
     def _print_progress_bar(self, iteration, total):
