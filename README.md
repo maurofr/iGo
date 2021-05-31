@@ -37,6 +37,7 @@ But don't worry. All the possible errors are considered, and if one appears, the
 
 ## The iGo concept
 The whole project is based on live traffic data obtained from [Barcelona opendata](https://opendata-ajuntament.barcelona.cat). The congestion data is updated every 5 minutes on the web, and on the bot as well. This way you will always have the most reliable data available.<br />
+On our tests the times only differ by 1 or 2 minutes with respect to Google Maps'!
 #### Displaying congestions
 We made the route plotting so that you can see where you will find some congestion as you can see in [the example image](#usage). The legend is:
 1. **Blue**: No congestion (generally it means that we have no data, but as it normally lacks the data of small streets, we can assume there will not be a lot of people there).

@@ -6,10 +6,7 @@ import random
 import time
 from igo import *
 
-TOKEN_ALBERT = "1848938537:AAEImx4WFL91JFydr9FnfmUIHMuxw1YFJqY"
-TOKEN_MAURO = "1609114464:AAGPKW9tf2XW-Z1Ydv-eriG7cPiGWr6LJYU"
-
-TOKEN = TOKEN_MAURO  # explicar al readme lo del token, que a l'entregar la pràctica això s'ha de treure
+TOKEN = "YOUR_TOKEN"  # Insert your bot token here
 
 PLACE = 'Barcelona, Catalonia'
 GRAPH_FILENAME = 'barcelona.graph'
