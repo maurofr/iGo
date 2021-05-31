@@ -426,7 +426,7 @@ class iGraph():
         POST: Returns the path with each node and its information and the total
               travel time in seconds.
         """
-        self.itime()
+        self._itime()
         origin_node = self.from_location_to_node(origin_lat, origin_lon)
         destination_node = self.from_location_to_node(destination_lat, destination_lon)
         path = osmnx.distance.shortest_path(self.digraph, origin_node, destination_node, weight='itime')

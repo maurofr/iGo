@@ -35,6 +35,21 @@ For example, if you use /go without a current position, the bot will return the 
 ![Image](go_without_a_position.png)
 But don't worry. All the possible errors are considered, and if one appears, the bot will return a message with an explanation of the error and how to solve it. Now it's up to you to try to find all the possible errors and exceptions!
 
+## The iGo concept
+The whole project is based on live traffic data obtained from [Barcelona opendata](opendata-ajuntament.barcelona.cat). The congestion data is updated every 5 minutes on the web, and on the bot as well. This way you will always have the most reliable data available.<br />
+#### Displaying congestions
+We made the route plotting so that you can see where you will find some congestion as you can see in [the example image](#usage). The legend is:
+0. **Blue**: No congestion (generally it means we have no data, but as we generally we lack the data of small streets, we can assume there will not be a lot of people there).
+1. **Green**: Fluid
+2. **Yellow**:
+3. **Orange**:
+4. **Red**:
+5. **Purple**:
+6. **Black**: The street is closed
+
+Unfortunately the telegram bot can't track your live position while updating it on the map you got on your first /go. The bot would have to spam a new map every time it detects a new position from your phone which would result in a pretty uncomfortable way to follow a GPS. Instead, we did it so that you should call the /go after some time to refresh congestions and get a new map from your new position.<br />
+To help with that the /set function lets you save an address with a name to make it easier to /go home or /go work and refresh the routes!
+
 ## Authors and acknowledgment
 - Authors: Mauro Filomeno and Albert Fugardo
 - Teachers: Jordi Petit and Jordi Cortadella
@@ -45,5 +60,3 @@ But don't worry. All the possible errors are considered, and if one appears, the
 For more help, contact:
 - mauro.filomeno@estudiantat.upc.edu
 - albert.fugardo@estudiantat.upc.edu
-
-## License

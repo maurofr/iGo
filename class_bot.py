@@ -17,7 +17,7 @@ GRAPH_FILENAME = 'barcelona.graph'
 SIZE = 800
 HIGHWAYS_URL = 'https://opendata-ajuntament.barcelona.cat/data/dataset/1090983a-1c40-4609-8620-14ad49aae3ab/resource/1d6c814c-70ef-4147-aa16-a49ddb952f72/download/transit_relacio_trams.csv'
 CONGESTIONS_URL = 'https://opendata-ajuntament.barcelona.cat/data/dataset/8319c2b1-4c21-4962-9acd-6db4c5ff1148/resource/2d456eb5-4ea6-4f68-9794-2f3f1a58a933/download'
-TRAFFIC_COLORS = ['blue', 'yellow', 'orange', 'red', 'purple', 'black', 'black']
+TRAFFIC_COLORS = ['blue', 'green', 'yellow', 'orange', 'red', 'purple', 'black']
 
 people = {}  # it is a dictionary with key the id of the user, and attributes the latitude and longitude of its position
 positions = {}  # dictionary with id as keys, every id containing a dictionary with the name of a place as id and its coordinates as attributes
