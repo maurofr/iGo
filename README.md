@@ -36,7 +36,7 @@ For example, if you use /go without a current position, the bot will return the 
 But don't worry. All the possible errors are considered, and if one appears, the bot will return a message with an explanation of the error and how to solve it. Now it's up to you to try to find all the possible errors and exceptions!
 
 ## The iGo concept
-The whole project is based on live traffic data obtained from [Barcelona opendata](opendata-ajuntament.barcelona.cat). The congestion data is updated every 5 minutes on the web, and on the bot as well. This way you will always have the most reliable data available.<br />
+The whole project is based on live traffic data obtained from [Barcelona opendata](https://opendata-ajuntament.barcelona.cat). The congestion data is updated every 5 minutes on the web, and on the bot as well. This way you will always have the most reliable data available.<br />
 #### Displaying congestions
 We made the route plotting so that you can see where you will find some congestion as you can see in [the example image](#usage). The legend is:
 1. **Blue**: No congestion (generally it means we have no data, but as we normally we lack the data of small streets, we can assume there will not be a lot of people there).
