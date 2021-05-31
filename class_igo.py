@@ -9,7 +9,6 @@ import staticmap
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-import random
 
 Highway = collections.namedtuple('Highway', 'tram')
 Congestion = collections.namedtuple('Congestion', 'tram')
@@ -17,8 +16,31 @@ Congestion = collections.namedtuple('Congestion', 'tram')
 
 class iGraph():
 
+    """
+    The iGraph class saves a an intelligent graph of a place. It is now designed
+    for Barcelona as it retrieves its live traffic data so that the graph can be
+    used to find the optimal between two places.
+    """
+
     # Init methods:
     def __init__(self, place, file, highways_url, congestions_url):
+        """
+        PRE: - place: the name of a city (right now it must be Barcelona) (Str)
+             - file: file in which data will be saved (Str)
+             - highways_url: the url of the database with Barcelona's highways (Str)
+             - congestions_url: the url of the live traffic data of the highways (Str)
+        ------------------------------------------------------------------------
+        POST: The graph of the place is imported and saved on a file so that it
+              can be loaded for future iGraphs.
+              All the PRE information is saved in private variables.
+              New attributes are added to the graph with value '0' such as
+              "congestion" and "itime".
+              The highways are computed and stored in a private matrix containing
+              its nodes.
+        """
+        # We will not compute bearings as they are not used in the current implementation
+        self.bearings = False
+
         if os.path.exists(file):
             with open(file, 'rb') as f:
                 self._graph, self.digraph = pickle.load(f)
@@ -30,11 +52,17 @@ class iGraph():
         self._highways_url = highways_url
         self._congestions_url = congestions_url
         self._highways = self._read_highways()
-        self._add_attributes()
         self._highways_nodes = []  # Vector amb els trams de la via pública
+        self._add_attributes()
         self._define_highways_nodes()
 
     def _add_edge_bearings_digraph(self):
+        """
+        PRE: - A newtorkx.digraph
+        ------------------------------------------------------------------------
+        POST: A new attribute is added to each edge of the graph containing the
+              bearing of the edge rounded to 1 decimal number.
+        """
         # extract edge IDs and corresponding coordinates from their nodes
         edges = [(u, v) for u, v in self.digraph.edges if u != v]
         x = self.digraph.nodes(data="x")
@@ -48,18 +76,44 @@ class iGraph():
 
     def _add_attributes(self):
         """
-        It adds all the necessary attributes to the edges.
+        It adds all the necessary attributes to the edges. By default bearings
+        are not added as they are not used for itime (live shortest-path-finding).
+
+        PRE: - self._bearings: tells if the bearing atribute will be added (Bool)
+             - self._graph: the networkx.mulitgraph of Barcelona
+             - self.digraph: the networkx.digraph of Barcelona
+        ------------------------------------------------------------------------
+        POST: New attributes to the multigraph:
+              - "congestion" for every edge, initialized as 0
+              - "bearing" if bearings is True
+              New attributes to the digraph:
+              - "congestion" for every edge, initialized as 0
+              - "itime" for every edge, initialized as 0
+              - "bearing" if bearings is True
         """
-        networkx.set_edge_attributes(self._graph, 0, "congestion")
-        networkx.set_edge_attributes(self.digraph, 0, "congestion")
-        networkx.set_edge_attributes(self._graph, 0, "itime")  # crec que no el necessita
+        networkx.set_edge_attributes(self._graph, 0, "  ")
         networkx.set_edge_attributes(self.digraph, 0, "itime")
-        networkx.set_edge_attributes(self._graph, 0, "bearing")  # Edges without a bearing are laces
-        networkx.set_edge_attributes(self.digraph, 0, "bearing")
-        osmnx.bearing.add_edge_bearings(self._graph)
-        self._add_edge_bearings_digraph()  # Osmnx bearing function is only for multigraphs
+        networkx.set_edge_attributes(self.digraph, 0, "congestion")
+        if self.bearings:
+            networkx.set_edge_attributes(self._graph, 0, "bearing")  # Edges without a bearing are laces
+            networkx.set_edge_attributes(self.digraph, 0, "bearing")
+            osmnx.bearing.add_edge_bearings(self._graph)
+            self._add_edge_bearings_digraph()  # Osmnx bearing function is only for multigraphs
 
     def _add_highway(self, node1, node2):
+        """
+        Finds the path between the two extremity nodes of the highway in both
+        directions. The path is computed as the shortes path lentgh-wise.
+
+        PRE: - node1, node2: the two nodes at the extremities of the highway
+             - self.digraph: the digraph is used to find the shortest path
+             - self._highways_nodes: with i-1 vectors (Matrix)
+        ------------------------------------------------------------------------
+        POST: If the nodes are connected in both directions, the paths are appended
+              to self._highways_nodes in a single vector.
+              Else an empty vector indicating that there is no highway for key
+              "i" is appended.
+        """
         try:
             route1 = osmnx.shortest_path(self.digraph, node1, node2)
             route2 = osmnx.shortest_path(self.digraph, node2, node1)
@@ -68,6 +122,19 @@ class iGraph():
             self._highways_nodes.append([])
 
     def _define_highways_nodes(self):
+        """
+        We save the highways in a graph-friendly format in order to be able to
+        update live traffic data for each highway efficiently.
+
+        PRE: - self._highways_url: the url to access Barcelona's highways (Str)
+             - self._highways_nodes: empty array
+             - self._highways: data from Barcelona's highways (Vector)
+        ------------------------------------------------------------------------
+        POST: self._highways[i] contains two paths of nodes, one for each direction,
+              of the highway with key "i" (in Barcelona's highways database).
+              self._highways[i] can be empty due to some highways being empty and
+              others out of the limits of our graph.
+        """
         for i in range(534):
             v = self._highways[i]
             if len(v) != 0:
@@ -81,6 +148,9 @@ class iGraph():
 
     # Output methods:
     def __str__(self):
+        """
+        Detailed information of the digraph is displayed in a human-friendly way.
+        """
         out = ""
         for node1, info1 in self.digraph.nodes.items():
             out += "Node: "
@@ -97,31 +167,104 @@ class iGraph():
         return out
 
     def __repr__(self):
+        """
+        It returns the __str__() output. For more information see its documentation.
+        """
         return self.__str__()
 
     def print_graph(self):
-        osmnx.plot_graph(self._graph)
+        """
+        It plots the graph of the place.
+
+        PRE: self._graph, the multigraph ad the digraph is not supported by the
+             plotting library.
+        ------------------------------------------------------------------------
+        POST: The graph is plotted on a display. If no display is found it is
+              saved as "graph_plot.png".
+        """
+        try:
+            osmnx.plot_graph(self._graph)
+        except:
+            print("There is no display to plot the graph. Saved as graph_plot.png")
+            osmnx.plot_graph(self._graph, show=False, save=True, filepath='graph_plot.png')
 
     def print_congestions(self):
-        ec = osmnx.plot.get_edge_colors_by_attr(self._graph, "congestion", cmap="YlOrRd")
-        osmnx.plot_graph(self._graph, edge_color=ec, edge_linewidth=2, node_size=0)
+        """
+        It plots a colormap of the edge's congestion.
+        The colormap is plotted on a display. If no display is found it is
+        saved as "congestions_plot.png".
+        """
+        try:
+            ec = osmnx.plot.get_edge_colors_by_attr(self._graph, "congestion", cmap="YlOrRd")
+            osmnx.plot_graph(self._graph, edge_color=ec, edge_linewidth=2, node_size=0)
+        except:
+            print("There is no display to plot the graph. Saved as congestions_plot.png")
+            osmnx.plot_graph(self._graph, edge_color=ec, edge_linewidth=2, node_size=0, \
+                             show=False, save=True, filepath='congestions_plot.png')
 
     def print_bearings(self):
-        cols = osmnx.plot.get_edge_colors_by_attr(self._graph, "bearing", num_bins=360, cmap="YlOrRd")
-        osmnx.plot_graph(self._graph, edge_color=cols, edge_linewidth=2, node_size=0)
+        """
+        It plots a colormap of the edge's bearings.
+
+        PRE: - self._bearings: indicates if bearings are considered (Bool)
+        -----------------------------------------------------------------------------
+        POST: The colormap is plotted on a display. If no display is found it is
+              saved as "bearings_plot.png".
+        """
+        if self.bearings:
+            cols = osmnx.plot.get_edge_colors_by_attr(self._graph, "bearing", num_bins=360, cmap="YlOrRd")
+            try:
+                osmnx.plot_graph(self._graph, edge_color=cols, edge_linewidth=2, node_size=0)
+            except:
+                print("There is no display to plot the graph. Saved as bearings_plot.png")
+                osmnx.plot_graph(self._graph, edge_color=cols, edge_linewidth=2, node_size=0, \
+                                 show=False, save=True, filepath='bearings_plot.png')
+
+    def print_path(self, path):
+        """
+        Plots the map of the city centered in the region, with the path visible on it.
+
+        PRE: - path: a collection of nodes (Vector)
+        -------------------------------------------------------------------------------
+        POST: It calculates the minimum region in which the path is visible. Then,
+              it is plotted on a display. If no display is found it is saved as
+              "path_plot.png".
+        """
+        max_x = 0
+        min_x = 1000
+        max_y = 0
+        min_y = 1000
+        for node in path:
+            if node['x'] < min_x:
+                min_x = node['x']
+            elif node['x'] > max_x:
+                max_x = node['x']
+            elif node['y'] < min_y:
+                min_y = node['y']
+            elif node['y'] > max_y:
+                max_y = node['y']
+        bbox = (max_y + 0.005, min_y - 0.005, max_x + 0.005, min_x - 0.005)  # +-0.005 to be able to see every node/edge completely
+
+        route = []
+        for node in path:
+            route.append(node['osmid'])
+        try:
+            osmnx.plot_graph_route(self._graph, route, route_color='r', route_linewidth=3, \
+                                   route_alpha=1, node_size=0, bgcolor='k', bbox=bbox)
+        except:
+            print("There is no display to plot the graph. Saved as path_plot.png")
+            osmnx.plot_graph(self._graph, route, route_color='r', route_linewidth=3, \
+                             route_alpha=1, node_size=0, bgcolor='k', bbox=bbox, \
+                             show=False, save=True, filepath='bearings_plot.png')
 
     def _print_progress_bar(self, iteration, total):
         """
         Prints a progress bar for the iterations of a loop.
-        @params:
-            iteration   - Required  : current iteration (Int)
-            total       - Required  : total iterations (Int)
-            prefix      - Optional  : prefix string (Str)
-            suffix      - Optional  : suffix string (Str)
-            decimals    - Optional  : positive number of decimals in percent complete (Int)
-            length      - Optional  : character length of bar (Int)
-            fill        - Optional  : bar fill character (Str)
-            printEnd    - Optional  : end character (e.g. "\r", "\r\n") (Str)
+
+        PRE: - iteration: current iteration (Int)
+             - total: total iterations (Int)
+        ------------------------------------------------------------------------
+        POST: Prints a progress bar and the percentage of the loop completed.
         """
         fill = '█'
         percent = ("{0:." + str(1) + "f}").format(100 * (iteration / float(total)))
@@ -131,8 +274,13 @@ class iGraph():
 
     # Live data reading and processing methods:
     def _coordinates_transform(self, coordinates):
-        """It transforms coordinates from a string into a vector
-        in which every position is a coordinate"""
+        """
+        It transforms a string of coordinates into a pair of floats.
+
+        PRE: - coordinates: the coordinates separated with a comma (Str)
+        ------------------------------------------------------------------------
+        POST: returns a vector with two elements, latitude and longitude as floats
+        """
         v = []
         s = ""
         pair = []
@@ -141,7 +289,6 @@ class iGraph():
                 if(len(pair) == 2):
                     v.append(pair)
                     pair = []
-
                 pair.append(float(s))
                 s = ""
             else:
@@ -151,6 +298,14 @@ class iGraph():
         return v
 
     def _read_highways(self):
+        """
+        Reads the data from the database of Barcelona's highways.
+
+        PRE: - self._highways_url: the url from which to extract the data (Str)
+        ------------------------------------------------------------------------
+        POST: Returns a vector in which the position "i" has the data of the
+              i-th highway (highway with hey "i")
+        """
         with urllib.request.urlopen(self._highways_url) as response:
             lines = [l.decode('utf-8') for l in response.readlines()]
             reader = csv.reader(lines, delimiter=',', quotechar='"')
@@ -164,6 +319,15 @@ class iGraph():
         return result
 
     def _read_congestions(self):
+        """
+        Reads the data from the database containing the congestion of Barcelona's
+        highways.
+
+        PRE: - self._congestions_url: the url from which to extract the data (Str)
+        --------------------------------------------------------------------------
+        POST: Returns a vector in which the position "i" has the congestion of the
+              i-th highway (highway with hey "i").
+        """
         with urllib.request.urlopen(self._congestions_url) as response:
             lines = [l.decode('utf-8') for l in response.readlines()]
             reader = csv.reader(lines, delimiter=',', quotechar='"')
@@ -178,8 +342,17 @@ class iGraph():
                 # way_id és de tipus list de mida 1. way_id[0] és un string
         return result
 
-    def _update_traffic_data(self, traffic_now, tram):
-        for route in tram:
+    def _update_traffic_data(self, traffic_now, highway):
+        """
+        Auxiliary function to get_traffic. It updates the congestion of a highway.
+
+        PRE: - highway: highway's paths of nodes (Vector)
+             - traffic_now: current value of the highway's congestion (Int)
+        -------------------------------------------------------------------------
+        POST: For each edge in each route the "congestion" attribute is equal to
+              traffic_now.
+        """
+        for route in highway:
             last_node = -1
             for node in route:
                 if last_node != -1:
@@ -188,27 +361,40 @@ class iGraph():
                 last_node = node
 
     def get_traffic(self):
+        """
+        Overwrites current traffic information with live congestion data of
+        Barcelona's highways.
+
+        PRE: self.digraph, self._graph
+        ------------------------------------------------------------------------
+        POST: Values are saved in each edge's "congestion" attribute in both graphs.
+        """
         congestions = self._read_congestions()
 
         for i in range(534):
             c = congestions[i]
             if len(c) != 0:
                 traffic_now = int(c[-3])
-                traffic_later = int(c[-1])
                 self._update_traffic_data(traffic_now, self._highways_nodes[i])
 
     # Other methods:
-
     def from_location_to_node(self, lat, lon):
-        """Receives the coordinates of a location and it returns its nearest node of the graph."""
+        """
+        Receives the coordinates of a location and it returns its nearest node
+        on the graph.
+
+        PRE: - lat, lon: latitude and longitude values (Float)
+        ------------------------------------------------------------------------
+        POST: Returns the nearest node in the graph.
+        """
         node = osmnx.distance.nearest_nodes(self.digraph, lon, lat)  # lon = 2. i lat = 41.
         return node
 
-    def itime(self):
+    def _itime(self):
         """
-        It adds a new attribute to every edge. This attribute is 'itime' and it
-        is calculated using the speed, length and congestions on a street. It
-        contains the expected time to go from the start to the end of the street.
+        The 'itime' attribute is calculated using the speed, length and congestions
+        of a street (edge). It contains the expected time in seconds to go from the
+        start to the end of the street.
         """
         for edge in self.digraph.edges():
             if 'maxspeed' in self.digraph.edges[edge]:
@@ -231,10 +417,14 @@ class iGraph():
 
     def get_shortest_path_with_ispeed(self, origin_lat, origin_lon, destination_lat, destination_lon):
         """
-        Given origin and destination coordinates, it calculates the shortest path
-        between them taking into account the 'itime' attribute. It also calculates
-        the time needed to complete the path, and it returns the path with
-        information related to each node(such as its coordinates) and the total time.
+        It calculates the shortest path between two nodes taking into account the
+        'itime' attribute. It also calculates the time needed to complete the path.
+
+        PRE: - origin_lat, origin_lon: latitude and longitude of the origin node (Float)
+             - destination_lat, destination_lon: same for the destination node (Float)
+        --------------------------------------------------------------------------------
+        POST: Returns the path with each node and its information and the total
+              travel time in seconds.
         """
         self.itime()
         origin_node = self.from_location_to_node(origin_lat, origin_lon)
@@ -253,57 +443,3 @@ class iGraph():
                 total_time = total_time + self.digraph.edges[last_node, node]["itime"]
             last_node = node
         return path_with_coordinates, total_time
-
-    def plot_path(self, path):
-        """
-        Given a path that goes from one node to another, it calculates the minimum
-        region in which the path is visible. Then, it prints the map of the city
-        centered in the region, with the path visible on it.
-        """
-        max_x = 0
-        min_x = 1000
-        max_y = 0
-        min_y = 1000
-        for node in path:
-            if node['x'] < min_x:
-                min_x = node['x']
-            elif node['x'] > max_x:
-                max_x = node['x']
-            elif node['y'] < min_y:
-                min_y = node['y']
-            elif node['y'] > max_y:
-                max_y = node['y']
-        bbox = (max_y + 0.005, min_y - 0.005, max_x + 0.005, min_x - 0.005)  # +-0.005 to be able to see every node/edge completely
-
-        route = []
-        for node in path:
-            route.append(node['osmid'])
-        osmnx.plot_graph_route(self._graph, route, route_color='r', route_linewidth=3,
-                               route_alpha=1, node_size=0, bgcolor='k', bbox=bbox)
-
-
-# Data
-PLACE = 'Barcelona, Catalonia'
-GRAPH_FILENAME = 'barcelona.graph'
-SIZE = 800
-HIGHWAYS_URL = 'https://opendata-ajuntament.barcelona.cat/data/dataset/1090983a-1c40-4609-8620-14ad49aae3ab/resource/1d6c814c-70ef-4147-aa16-a49ddb952f72/download/transit_relacio_trams.csv'
-CONGESTIONS_URL = 'https://opendata-ajuntament.barcelona.cat/data/dataset/8319c2b1-4c21-4962-9acd-6db4c5ff1148/resource/2d456eb5-4ea6-4f68-9794-2f3f1a58a933/download'
-
-
-# Testing code
-# bcn_map = iGraph(PLACE, GRAPH_FILENAME, HIGHWAYS_URL, CONGESTIONS_URL)
-# bcn_map.itime()
-"""
-bcn_map.print_bearings()
-location1 = osmnx.geocoder.geocode("Camp Nou Barcelona")
-location2 = osmnx.geocoder.geocode("Sagrada Família Barcelona")
-path, time = bcn_map.get_shortest_path_with_ispeed(location1[0], location1[1], location2[0], location2[1])
-bcn_map.plot_path(path)
-"""
-
-
-# bcn_map.print_graph()
-
-# print(bcn_map)
-# bcn_map.get_traffic()  # Actualitzar dades de trànsit
-# bcn_map.print_congestions()  # Plot amb el trànsit
