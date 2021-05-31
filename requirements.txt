@@ -2,11 +2,11 @@
 # Requirements file with all necessary libraries for this project
 # Run it in your shell with: pip3 install -r requirements.txt
 #
-haversine==2.3.0
-numpy==1.19.2
-matplotlib==3.3.3
-python-telegram-bot==13.5
-staticmap==0.5.5
 osmnx==1.1.0
+python-telegram-bot==13.5
+haversine==2.3.0
+matplotlib==3.3.3
 urllib3==1.25.8
 networkx==2.5.1
+staticmap==0.5.5
+numpy==1.19.2

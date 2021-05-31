@@ -25,7 +25,11 @@ positions = {}  # dictionary with id as keys, every id containing a dictionary w
 
 def is_number(s):
     """
-    It receives a string and it returns true if it could be a float, and false otherwise.
+    Indicates if a string is a float.
+
+    PRE: - s: the string
+    ----------------------------------------------------------------------------
+    POST: Returns true if it could be a float, and false otherwise.
     """
     try:
         float(s)
