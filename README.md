@@ -7,7 +7,7 @@ This project consists of two files.
 
 The body of the project is the igo.py file. It contains all the code related to creating the graph, adding attributes to it (such as congestions, highways and itime) and calculating the shortest path from one node to another. This path is obtained taking into account the itime, the time necessary to go from the start to the end of a street (edges in the graph), calculated with the length of the street, the maximum speed, and the real time congestions.
 
-The bot.py file uses the igo.py file. It offers to the telegram user all the operations that are done in the igo.py file to find the shortest way to his destination! The telegram bot has different functions, such as /start, /help, /author, /go, /where, /set and /myplaces.<br />
+The bot.py file uses the igo.py file. It offers to the telegram user all the operations that are done in the igo.py file to find the shortest way to his destination. The telegram bot has different functions, such as /start, /help, /author, /go, /where, /set and /myplaces.<br />
 The behaviour of every function is explained on the same bot, and it can be seen sending a message with the /help command to the bot.
 
 **Background**: To see a more complete description of the project, please visit this [link](https://github.com/jordi-petit/ap2-igo-2021).
@@ -39,12 +39,12 @@ But don't worry. All the possible errors are considered, and if one appears, the
 The whole project is based on live traffic data obtained from [Barcelona opendata](https://opendata-ajuntament.barcelona.cat). The congestion data is updated every 5 minutes on the web, and on the bot as well. This way you will always have the most reliable data available.<br />
 #### Displaying congestions
 We made the route plotting so that you can see where you will find some congestion as you can see in [the example image](#usage). The legend is:
-1. **Blue**: No congestion (generally it means we have no data, but as we normally we lack the data of small streets, we can assume there will not be a lot of people there).
-2. **Green**: Fluid
-3. **Yellow**:
-4. **Orange**:
-5. **Red**:
-6. **Purple**:
+1. **Blue**: No congestion (generally it means that we have no data, but as it normally lacks the data of small streets, we can assume there will not be a lot of people there).
+2. **Green**: Very fluid
+3. **Yellow**: Fluid
+4. **Orange**: Dense
+5. **Red**: Very dense
+6. **Purple**: Congestion
 7. **Black**: The street is closed
 
 Unfortunately the telegram bot can't track your live position while updating it on the map you got on your first /go. The bot would have to spam a new map every time it detects a new position from your phone which would result in a pretty uncomfortable way to follow a GPS. Instead, we did it so that you should call the /go after some time to refresh congestions and get a new map from your new position.<br />
